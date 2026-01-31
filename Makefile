@@ -1,7 +1,6 @@
 # Makefile for zapoctak project
 # Build: make
 # Build examples: make examples
-# Run examples: make run_examples
 # Clean: make clean
 
 CC := gcc
@@ -26,7 +25,7 @@ EXAMPLES := example_conversion example_multiply example_add example_subtract exa
 EXAMPLE_SOURCES := $(addprefix $(EXDIR)/,$(addsuffix .c,$(EXAMPLES)))
 EXAMPLE_BINS := $(addprefix $(BINDIR)/,$(EXAMPLES))
 
-.PHONY: all examples run_examples clean distclean help
+.PHONY: all examples clean distclean help
 
 # Default target
 all: $(LIBRARY)
@@ -73,7 +72,6 @@ help:
 	@echo "Available targets:"
 	@echo "  make              - Build the static library"
 	@echo "  make examples     - Build example programs"
-	@echo "  make run_examples - Build and run all examples"
 	@echo "  make clean        - Remove build artifacts"
 	@echo "  make distclean    - Full clean"
 	@echo "  make help         - Show this help message"
