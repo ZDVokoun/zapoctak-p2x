@@ -1,92 +1,14 @@
+#include "config.h"
+#include "conversion.h"
+#include "mp_number.h"
+#include "residue.h"
 #include <ctype.h>
-#include <limits.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-
-#if BITINT_MAXWIDTH < 128
-#error                                                                         \
-    "This C23 compiler does not support 128-bit integers needed for fast Base 2^64 arithmetic."
-#endif
+#include <stdlib.h>
+#include <stdio.h>
 
 #define POW_TEN 19
 #define TEN_POW_19 10000000000000000000ULL
-
-typedef unsigned _BitInt(128) uint128_t;
-
-// Defining coprime Mersenne moduli
-size_t moduli64len = 15;
-uint64_t moduli64[15] = {63, 61, 59, 55, 53, 47, 43, 41,
-                         37, 31, 29, 23, 19, 17, 13};
-
-// size_t moduli32len = 10;
-// uint32_t moduli32[10] = {31, 29, 27, 25, 23, 19, 17, 13, 11, 7};
-
-struct Base2_64Int {
-  uint64_t *limbs; // Limbs are stored in little-endian order
-  size_t len;
-  size_t capacity;
-};
-
-void b64_init(struct Base2_64Int *bn, size_t initial_cap) {
-  bn->limbs = calloc(initial_cap, sizeof(uint64_t));
-  bn->len = 0;
-  bn->capacity = initial_cap;
-}
-
-void b64_free(struct Base2_64Int *bn) {
-  free(bn->limbs);
-  bn->len = 0;
-  bn->capacity = 0;
-}
-
-void print_base2_64(const struct Base2_64Int *bn) {
-  printf("Base 2^64 representation:\n");
-  for (size_t i = 0; i < bn->len; i++) {
-    printf("Limb %zu: %llu\n", i, bn->limbs[i]);
-  }
-}
-
-void b64_mul(struct Base2_64Int *bn, uint64_t multiplier, uint64_t addend) {
-  uint128_t carry = (uint128_t)addend;
-
-  for (size_t i = 0; i < bn->capacity; i++) {
-    // Early exit conditions
-    if (carry == 0 && bn->limbs[i] == 0)
-      break;
-
-    // Early exit condition when doing addition only
-    if (carry == 0 && multiplier == 1)
-      break;
-
-    uint128_t product = (uint128_t)bn->limbs[i] * (uint128_t)multiplier + carry;
-
-    bn->limbs[i] = (uint64_t)product;
-
-    bn->len = (i + 1 > bn->len) ? i + 1 : bn->len;
-
-    carry = product >> 64;
-  }
-
-  if (carry > 0) {
-    if (bn->len >= bn->capacity) {
-      size_t old_capacity = bn->capacity;
-      bn->capacity *= 2;
-      bn->limbs = realloc(bn->limbs, bn->capacity * sizeof(uint64_t));
-
-      if (bn->limbs == NULL) {
-        // TODO Throw error
-        return;
-      }
-
-      memset(bn->limbs + old_capacity, 0, old_capacity * sizeof(uint64_t));
-    }
-    bn->limbs[bn->len] = (uint64_t)carry;
-    bn->len++;
-  }
-}
 
 void decimal_string_to_base2_64(const char *str, struct Base2_64Int *result) {
   /*
@@ -143,36 +65,6 @@ void decimal_string_to_base2_64(const char *str, struct Base2_64Int *result) {
   }
 }
 
-struct ResidueInt {
-  uint64_t *residues;
-  size_t len;
-};
-
-void init_residue(struct ResidueInt *res, size_t minimumSz) {
-
-  size_t moduliSum = 0;
-  size_t moduliCount = 0;
-  for (size_t i = 0; i < moduli64len; i++) {
-    moduliSum += moduli64[i];
-    if (moduliSum >= minimumSz) {
-      moduliCount = i + 1;
-      break;
-    }
-  }
-  if (moduliSum < minimumSz) {
-    // TODO Throw error
-    return;
-  }
-
-  res->len = moduliCount;
-  res->residues = malloc(res->len * sizeof(uint64_t));
-}
-
-void residue_free(struct ResidueInt *res) {
-  free(res->residues);
-  res->len = 0;
-}
-
 void base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
                          struct ResidueInt *res) {
   /*
@@ -225,50 +117,6 @@ void base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
   }
 }
 
-void residue_add(const struct ResidueInt *a, const struct ResidueInt *b) {
-  if (a->len != b->len) {
-    // TODO Throw error
-    return;
-  }
-
-  for (size_t i = 0; i < a->len; i++) {
-    uint64_t modulus = (1ULL << moduli64[i]) - 1;
-    a->residues[i] = (a->residues[i] + b->residues[i]) % modulus;
-  }
-}
-void residue_sub(const struct ResidueInt *a, const struct ResidueInt *b) {
-  if (a->len != b->len) {
-    // TODO Throw error
-    return;
-  }
-
-  for (size_t i = 0; i < a->len; i++) {
-    uint64_t modulus = (1ULL << moduli64[i]) - 1;
-    a->residues[i] = (a->residues[i] + modulus - b->residues[i]) % modulus;
-  }
-}
-
-void residue_mul(const struct ResidueInt *a, const struct ResidueInt *b) {
-  if (a->len != b->len) {
-    // TODO Throw error
-    return;
-  }
-
-  for (size_t i = 0; i < a->len; i++) {
-    uint64_t modulus = (1ULL << moduli64[i]) - 1;
-    uint128_t product = (uint128_t)a->residues[i] * (uint128_t)b->residues[i];
-    a->residues[i] = (uint64_t)(product % modulus);
-  }
-}
-
-void print_residue(const struct ResidueInt *res) {
-  printf("\nResidue representation:\n");
-  for (size_t i = 0; i < res->len; i++) {
-    printf("Modulus %zu (2^%llu - 1): Residue %llu\n", i, moduli64[i],
-           res->residues[i]);
-  }
-}
-
 void residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn) {
   // TODO Implement the conversion from residue representation to Base 2^64
 
@@ -314,37 +162,6 @@ void residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn) {
   }
 }
 
-uint64_t fast_div128_64(uint64_t high, uint64_t low, uint64_t divisor,
-                        uint64_t *rem) {
-  // Optimized for x86-64: Uses single 'divq' instruction
-  // PRECONDITION: high < divisor
-  uint64_t quotient;
-
-  __asm__("divq %[v]"
-          : "=a"(quotient),
-            "=d"(*rem) // Outputs: a=RAX (quotient), d=RDX (remainder)
-          : "d"(high), "a"(low), [v] "r"(divisor) // Inputs: RDX=high, RAX=low
-          : "cc"                                  // Clobbers flags
-  );
-
-  return quotient;
-}
-
-void base2_64_divmod(struct Base2_64Int *bn, uint64_t divisor,
-                     uint64_t *remainder) {
-  uint64_t rem = 0;
-
-  for (size_t i = bn->len; i-- > 0;) {
-    uint64_t ql = fast_div128_64(rem, bn->limbs[i], divisor, &rem);
-    bn->limbs[i] = ql;
-  }
-
-  *remainder = rem;
-
-  if (bn->len >= 1 && bn->limbs[bn->len - 1] == 0)
-    bn->len--;
-}
-
 void base2_64_decimal_string(const struct Base2_64Int *bn, const char *str) {
   struct Base2_64Int temp;
   b64_init(&temp, bn->capacity);
@@ -383,39 +200,4 @@ void base2_64_decimal_string(const struct Base2_64Int *bn, const char *str) {
     buffer[len - 1 - i] = tmp;
   }
   strcpy((char *)str, buffer);
-}
-
-int main() {
-  struct Base2_64Int bn;
-  struct ResidueInt res1;
-  struct ResidueInt res2;
-
-  const char *decimal_str = "1234567890123456789012345678901234567890";
-
-  decimal_string_to_base2_64(decimal_str, &bn);
-
-  base2_64_to_residue(&bn, bn.len * 64 * 2, &res1);
-  base2_64_to_residue(&bn, bn.len * 64 * 2, &res2);
-
-  // base2_64_print_decimal(&bn);
-  print_residue(&res1);
-  print_residue(&res2);
-
-  residue_mul(&res1, &res2);
-
-  print_residue(&res1);
-
-  struct Base2_64Int bn2;
-  residue_to_base2_64(&res1, &bn2);
-  print_base2_64(&bn2);
-  const char result_str[4096];
-  base2_64_decimal_string(&bn2, result_str);
-  puts(result_str);
-
-  b64_free(&bn);
-  b64_free(&bn2);
-  residue_free(&res1);
-  residue_free(&res2);
-
-  return 0;
 }
