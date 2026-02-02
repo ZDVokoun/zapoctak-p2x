@@ -14,7 +14,6 @@ struct Base2_64Int {
   uint64_t *limbs;
   size_t len;
   size_t capacity;
-  bool sign; // false = positive, true = negative
 };
 
 /**
@@ -44,25 +43,6 @@ int b64_copy(struct Base2_64Int *dst, const struct Base2_64Int *src);
  * Returns: 0 on success, -1 on memory allocation failure
  */
 int b64_expand(struct Base2_64Int *bn, size_t new_cap);
-
-/**
- * Compare absolute values of two Base2_64Int numbers
- * Returns: 1 if |a| > |b|, -1 if |a| < |b|, 0 if |a| == |b|
- */
-int b64_b64_cmp(const struct Base2_64Int *a, const struct Base2_64Int *b);
-
-/**
- * Add two Base2_64Int numbers: a = a + b (in-place)
- * Returns: 0 on success, -1 on memory allocation failure
- */
-int b64_b64_add(struct Base2_64Int *a, const struct Base2_64Int *b);
-
-/**
- * Subtract two Base2_64Int numbers: a = a - b (in-place)
- * PRECONDITION: |a| >= |b|
- * Returns: 0 on success, -1 on memory allocation failure
- */
-int b64_b64_sub(struct Base2_64Int *a, const struct Base2_64Int *b);
 
 /**
  * Multiply Base2_64Int by a scalar and add an addend

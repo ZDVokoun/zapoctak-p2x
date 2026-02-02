@@ -4,7 +4,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "config.h"
-#include "mp_number.h"
 
 /**
  * Residue number system representation using Mersenne moduli
@@ -12,7 +11,6 @@
 struct ResidueInt {
   uint64_t *residues;
   size_t len;
-  struct Base2_64Int range; // Range of representable numbers, used for signed representation
 };
 
 /**

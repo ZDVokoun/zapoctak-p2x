@@ -31,29 +31,7 @@ int init_residue(struct ResidueInt *res, size_t minimumSz) {
     return -1;
   }
   res->len = moduliCount;
-
-  // Compute bias for signed representation
-  struct Base2_64Int range;
-  if (b64_init(&range, 1) != 0) {
-    free(res->residues);
-    res->residues = NULL;
-    res->len = 0;
-    return -1;
-  }
-  range.limbs[0] = 1;
-  range.len = 1;
-  for (size_t i = 0; i < res->len; i++) {
-    uint64_t modulus = (1ULL << moduli64[i]) - 1;
-    if (b64_mul(&range, modulus, 0) != 0) {
-      b64_free(&range);
-      free(res->residues);
-      res->residues = NULL;
-      res->len = 0;
-      return -1;
-    }
-  }
-
-  res->range = range;
+  
   return 0;
 }
 
