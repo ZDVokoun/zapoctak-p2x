@@ -17,8 +17,9 @@ struct Base2_64Int {
 
 /**
  * Initialize a Base2_64Int number with given capacity
+ * Returns: 0 on success, -1 on memory allocation failure
  */
-void b64_init(struct Base2_64Int *bn, size_t initial_cap);
+int b64_init(struct Base2_64Int *bn, size_t initial_cap);
 
 /**
  * Free resources allocated for a Base2_64Int number
@@ -33,14 +34,16 @@ void print_base2_64(const struct Base2_64Int *bn);
 /**
  * Multiply Base2_64Int by a scalar and add an addend
  * Performs: bn = bn * multiplier + addend
+ * Returns: 0 on success, -1 on memory allocation failure
  */
-void b64_mul(struct Base2_64Int *bn, uint64_t multiplier, uint64_t addend);
+int b64_mul(struct Base2_64Int *bn, uint64_t multiplier, uint64_t addend);
 
 /**
  * Division with modulo for Base2_64Int by a 64-bit divisor
  * Result: bn = bn / divisor, *remainder = bn % divisor
+ * Returns: 0 on success, -1 on invalid arguments (divisor == 0, remainder == NULL)
  */
-void base2_64_divmod(struct Base2_64Int *bn, uint64_t divisor,
+int base2_64_divmod(struct Base2_64Int *bn, uint64_t divisor,
                      uint64_t *remainder);
 
 /**

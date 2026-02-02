@@ -15,8 +15,9 @@ struct ResidueInt {
 
 /**
  * Initialize a ResidueInt with enough moduli to represent minimumSz bits
+ * Returns: 0 on success, -1 on memory allocation failure or insufficient moduli capacity
  */
-void init_residue(struct ResidueInt *res, size_t minimumSz);
+int init_residue(struct ResidueInt *res, size_t minimumSz);
 
 /**
  * Free resources allocated for a ResidueInt
@@ -25,26 +26,30 @@ void residue_free(struct ResidueInt *res);
 
 /**
  * Copy a ResidueInt number
+ * Returns: 0 on success, -1 on memory allocation failure
  */
-void residue_copy(struct ResidueInt *dst, const struct ResidueInt *src);
+int residue_copy(struct ResidueInt *dst, const struct ResidueInt *src);
 
 /**
  * Add two residue numbers: a = a + b (in-place)
  * PRECONDITION: a->len == b->len
+ * Returns: 0 on success, -1 if lengths don't match or pointers are NULL
  */
-void residue_add(const struct ResidueInt *a, const struct ResidueInt *b);
+int residue_add(const struct ResidueInt *a, const struct ResidueInt *b);
 
 /**
  * Subtract two residue numbers: a = a - b (in-place)
  * PRECONDITION: a->len == b->len
+ * Returns: 0 on success, -1 if lengths don't match or pointers are NULL
  */
-void residue_sub(const struct ResidueInt *a, const struct ResidueInt *b);
+int residue_sub(const struct ResidueInt *a, const struct ResidueInt *b);
 
 /**
  * Multiply two residue numbers: a = a * b (in-place)
  * PRECONDITION: a->len == b->len
+ * Returns: 0 on success, -1 if lengths don't match or pointers are NULL
  */
-void residue_mul(const struct ResidueInt *a, const struct ResidueInt *b);
+int residue_mul(const struct ResidueInt *a, const struct ResidueInt *b);
 
 /**
  * Print ResidueInt representation (debug)
