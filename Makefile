@@ -21,7 +21,7 @@ LIB_OBJECTS := $(addprefix $(OBJDIR)/,$(notdir $(LIB_SOURCES:.c=.o)))
 LIBRARY := $(BUILDDIR)/libzapoctak.a
 
 # Example files
-EXAMPLES := example_conversion example_multiply example_add example_subtract example_square
+EXAMPLES := example_b64_conversion example_residue_conversion example_multiply example_add example_subtract example_square
 EXAMPLE_SOURCES := $(addprefix $(EXDIR)/,$(addsuffix .c,$(EXAMPLES)))
 EXAMPLE_BINS := $(addprefix $(BINDIR)/,$(EXAMPLES))
 

@@ -33,8 +33,17 @@ int decimal_string_to_base2_64(const char *str, struct Base2_64Int *result) {
     return -1;
   }
 
-  // Skip leading whitespace/zeros if necessary
-  while (*p == '0' || isspace(*p)) {
+  // Skip leading whitespace/zeros if necessary and handle sign
+  while (isspace(*p)) {
+    p++;
+    len--;
+  }
+  if (*p == '-') {
+    result->sign = 1;
+    p++;
+    len--;
+  }
+  while(*p == '0') {
     p++;
     len--;
   }
@@ -89,17 +98,25 @@ int base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
    * Arithmetic
    * Returns: 0 on success, -1 on error
    */
+
   if (bn == NULL || res == NULL) {
     fprintf(stderr, "Error: NULL pointer passed to base2_64_to_residue\n");
     return -1;
   }
   
-  if (bn->len * 64 > minimumSz)
-    minimumSz = bn->len * 64;
+  if (bn->len * 64 + 1 > minimumSz)
+    minimumSz = bn->len * 64 + 1;
   
   if (init_residue(res, minimumSz) != 0) {
     return -1;
   }
+
+  struct Base2_64Int temp_bn;
+  if (b64_copy(&temp_bn, bn) != 0) {
+    residue_free(res);
+    return -1;
+  }
+  b64_b64_add(&temp_bn, &res->range);
 
   for (size_t i = 0; i < res->len; i++) {
     uint64_t modulusPow = moduli64[i];
@@ -109,27 +126,27 @@ int base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
     size_t current_bit = 0;
     size_t limb_index = 0;
 
-    for (size_t j = 0; j < bn->len * 64; j += modulusPow) {
+    for (size_t j = 0; j < temp_bn.len * 64; j += modulusPow) {
 
       if (current_bit >= 64) {
         current_bit -= 64;
         limb_index++;
       }
-      if (limb_index >= bn->len) {
+      if (limb_index >= temp_bn.len) {
         break;
       }
       // printf("Current bit: %zu Limb index: %zu\n", current_bit, limb_index);
       if (current_bit + modulusPow > 64) {
         uint64_t lower_part, upper_part = 0;
-        lower_part = (bn->limbs[limb_index] >> current_bit) & modulus;
-        if (bn->len > limb_index + 1) {
+        lower_part = (temp_bn.limbs[limb_index] >> current_bit) & modulus;
+        if (temp_bn.len > limb_index + 1) {
           upper_part =
-              bn->limbs[limb_index + 1] & (modulus >> (64 - current_bit));
+              temp_bn.limbs[limb_index + 1] & (modulus >> (64 - current_bit));
         }
         residue += lower_part | (upper_part << (64 - current_bit));
 
       } else {
-        residue += (bn->limbs[limb_index] >> current_bit) & modulus;
+        residue += (temp_bn.limbs[limb_index] >> current_bit) & modulus;
       }
       residue %= modulus;
 
@@ -138,13 +155,19 @@ int base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
 
     res->residues[i] = residue;
   }
+
+  b64_free(&temp_bn);
   
   return 0;
 }
 
-int residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn) {
-  // TODO Implement the conversion from residue representation to Base 2^64
-  
+int residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn) { 
+  /*
+   * Converts a residue representation back to Base 2^64 integer.
+   * The conversion algorithm uses mixed radix system conversion.
+   * Returns: 0 on success, -1 on error
+   */
+
   if (res == NULL || bn == NULL) {
     fprintf(stderr, "Error: NULL pointer passed to residue_to_base2_64\n");
     return -1;
@@ -194,7 +217,21 @@ int residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn) {
       return -1;
     }
   }
-  
+
+  struct Base2_64Int bias;
+  if (b64_copy(&bias, &res->range) != 0) {
+    b64_free(bn);
+    return -1;
+  }
+  b64_mul(&bias, 1, 1); // Add 1 before dividing by 2 (ceiling for odd numbers)
+  base2_64_divmod(&bias, 2, NULL); // Divide by 2 to get bias for signed representation
+
+  if (b64_b64_cmp(bn, &bias) > 0) {
+    // Because we have a number greater than the bias, the result is negative
+    b64_b64_sub(bn, &res->range);
+    bn->sign = 1;
+  }
+  b64_free(&bias);
   return 0;
 }
 

@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "config.h"
 
 /**
@@ -13,6 +14,7 @@ struct Base2_64Int {
   uint64_t *limbs;
   size_t len;
   size_t capacity;
+  bool sign; // false = positive, true = negative
 };
 
 /**
@@ -32,16 +34,47 @@ void b64_free(struct Base2_64Int *bn);
 void print_base2_64(const struct Base2_64Int *bn);
 
 /**
+ * Copy a Base2_64Int number
+ * Returns: 0 on success, -1 on memory allocation failure
+ */
+int b64_copy(struct Base2_64Int *dst, const struct Base2_64Int *src);
+
+/**
+ * Expand the capacity of a Base2_64Int number
+ * Returns: 0 on success, -1 on memory allocation failure
+ */
+int b64_expand(struct Base2_64Int *bn, size_t new_cap);
+
+/**
+ * Compare absolute values of two Base2_64Int numbers
+ * Returns: 1 if |a| > |b|, -1 if |a| < |b|, 0 if |a| == |b|
+ */
+int b64_b64_cmp(const struct Base2_64Int *a, const struct Base2_64Int *b);
+
+/**
+ * Add two Base2_64Int numbers: a = a + b (in-place)
+ * Returns: 0 on success, -1 on memory allocation failure
+ */
+int b64_b64_add(struct Base2_64Int *a, const struct Base2_64Int *b);
+
+/**
+ * Subtract two Base2_64Int numbers: a = a - b (in-place)
+ * PRECONDITION: |a| >= |b|
+ * Returns: 0 on success, -1 on memory allocation failure
+ */
+int b64_b64_sub(struct Base2_64Int *a, const struct Base2_64Int *b);
+
+/**
  * Multiply Base2_64Int by a scalar and add an addend
  * Performs: bn = bn * multiplier + addend
- * Returns: 0 on success, -1 on memory allocation failure
+ * Returns: 0 on success, -1 on memory allocation failure or if negative numbers are used
  */
 int b64_mul(struct Base2_64Int *bn, uint64_t multiplier, uint64_t addend);
 
 /**
  * Division with modulo for Base2_64Int by a 64-bit divisor
  * Result: bn = bn / divisor, *remainder = bn % divisor
- * Returns: 0 on success, -1 on invalid arguments (divisor == 0, remainder == NULL)
+ * Returns: 0 on success, -1 on invalid arguments (divisor == 0)
  */
 int base2_64_divmod(struct Base2_64Int *bn, uint64_t divisor,
                      uint64_t *remainder);
