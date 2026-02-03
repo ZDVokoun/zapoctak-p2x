@@ -1,0 +1,76 @@
+\documentclass[titlepage]{article}
+
+\usepackage[czech]{babel}
+\usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\def\MyTitle{Reziduální aritmetika}
+\def\MySubtitle{Dokumentace k zápočtovému programu na P2X}
+\def\MyAuthor{Ondřej Sedláček}
+\def\MyDate{\today}
+
+\newtheorem{theorem}{Věta}
+
+\begin{document}
+
+\begin{titlepage}
+  \vbox to \textheight{
+    \vfill
+    
+    \centering
+    
+    {\Huge\bfseries \MyTitle\par} 
+
+    {\large\bfseries \MySubtitle\par}
+    
+    \vspace{2cm}
+    
+    {\LARGE \MyAuthor\par}
+    
+    \vspace{1cm}
+    
+    {\large \MyDate\par}
+
+    \vfill
+  }
+\end{titlepage}
+\clearpage
+\pagenumbering{roman}
+
+\tableofcontents
+\listoffigures
+
+\clearpage
+\pagenumbering{arabic}
+
+\section{Úvod}
+
+K zápočtovému programu jsem si vybral téma Reziduální aritmetika, jehož součástí je implementace provádění aritmetických operací s dlouhými čísly za pomocí poznatků o zbytcích po dělení. Každé číslo v určitém rozmezí umíme jednoznačně vyjádřit jako seznam zbytků po dělení několika nesoudělnými čísly a s tímto seznamem pak velmi efektivně sčítat, odčítat a násobit.
+
+Vytvořil jsem tedy knihovnu v jazyce C, která implementuje veškeré potřebné operace, jako je převod z desítkového zápisu na zápis se zbytky a naopak a pak operace sčítání, odčítání, násobení a porovnávání.
+
+\section{Teorie}
+
+Celý tento program stojí na poznatku z teorie čísel, které se nazývá Čínská zbytková věta. Níže je její znění:
+
+\begin{theorem}[Čínská zbytková věta]
+Nechť $n_1, n_2, \dots, n_k$ jsou po dvou nesoudělná přirozená čísla, tj. $\gcd(n_i, n_j) = 1$ pro $i \neq j$. Označme $N = n_1 n_2 \dots n_k$. Potom pro libovolná celá čísla $a_1, a_2, \dots, a_k$ má soustava kongruencí
+$$
+\begin{aligned}
+    x &\equiv a_1 \pmod{n_1} \\
+    x &\equiv a_2 \pmod{n_2} \\
+      &\vdots \\
+    x &\equiv a_k \pmod{n_k}
+\end{aligned}
+$$
+řešení, které je určeno jednoznačně modulo $N$.
+\end{theorem}
+
+
+
+\end{document}

@@ -1,3 +1,8 @@
 build/
 .gdb_history
-docs/
+docs/build/
+*.log
+*.aux
+*.out
+*.lof
+*.toc
