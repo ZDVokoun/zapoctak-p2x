@@ -9,16 +9,15 @@
  * 1. Parse decimal string to Base 2^64
  * 2. Convert to residue representation
  * 3. Perform multiplication in residue domain
- * 4. Convert back to Base 2^64
- * 5. Output as decimal string
+ * 4. Output as decimal string
  */
 int main() {
-  struct Base2_64Int bn1, bn2, result;
+  struct Base2_64Int bn1, bn2;
   struct ResidueInt res1, res2;
 
-  // Example: 123456789 * 987654321
-  const char *num1_str = "123456789";
-  const char *num2_str = "987654321";
+  // Example: 123456789123456789 * 987654321987654321
+  const char *num1_str = "123456789123456789";
+  const char *num2_str = "987654321987654321";
 
   printf("=== Multi-Precision Arithmetic using Residue Number System ===\n\n");
 
@@ -48,20 +47,15 @@ int main() {
   printf("Multiplication completed\n");
   print_residue(&res1);
 
-  printf("\n=== Converting Result Back to Base 2^64 ===\n");
-  residue_to_base2_64(&res1, &result);
-  print_base2_64(&result);
-
-  printf("\n=== Final Result ===\n");
+  printf("\n=== Conversion Back to Decimal Representation ===\n");
   char result_str[4096];
-  base2_64_decimal_string(&result, result_str);
+  residue_to_decimal_string(&res1, result_str);
   printf("Result: %s\n", result_str);
-  printf("Expected: 121932631112635269\n");
+  printf("Expected: 121932631356500531347203169112635269\n");
 
   // Cleanup
   b64_free(&bn1);
   b64_free(&bn2);
-  b64_free(&result);
   residue_free(&res1);
   residue_free(&res2);
 

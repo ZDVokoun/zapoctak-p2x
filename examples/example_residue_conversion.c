@@ -35,16 +35,9 @@ int main() {
     printf("Residue %zu: %lu\n", i, rem);
   }
 
-  printf("\n=== Conversion Back to Base 2^64 ===\n\n");
-  struct Base2_64Int bn_converted;
-  residue_to_base2_64(&res, &bn_converted);
-  print_base2_64(&bn_converted);
-  printf("Expected Base 2^64 representation:\n");
-  print_base2_64(&bn);
-
-  printf("\n=== Final Decimal Representation ===\n\n");
+  printf("\n=== Conversion Back to Decimal Representation ===\n\n");
   char result_str[4096];
-  base2_64_decimal_string(&bn_converted, result_str);
+  residue_to_decimal_string(&res, result_str);
   printf("Converted back to decimal: %s\n", result_str);
   printf("Expected: %s\n", example);
 

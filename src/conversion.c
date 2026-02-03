@@ -96,7 +96,7 @@ int base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
   }
   
   if (bn->len * 64 + 1 > minimumSz)
-    minimumSz = bn->len * 64;
+    minimumSz = bn->len * 64 + 1;
   
   if (init_residue(res, minimumSz) != 0) {
     return -1;
@@ -144,22 +144,48 @@ int base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
   return 0;
 }
 
-int residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn) { 
+int decimal_string_to_residue(const char *str, size_t minimumSz,
+                           struct ResidueInt *res) {
   /*
-   * Converts a residue representation back to Base 2^64 integer.
-   * The conversion algorithm uses mixed radix system conversion.
+   * Converts a decimal string to its residue representation.
+   * This function first converts the decimal string to Base 2^64 integer
+   * representation and then to residue representation.
    * Returns: 0 on success, -1 on error
    */
 
-  if (res == NULL || bn == NULL) {
-    fprintf(stderr, "Error: NULL pointer passed to residue_to_base2_64\n");
+  if (str == NULL || res == NULL) {
+    fprintf(stderr, "Error: NULL pointer passed to decimal_string_to_residue\n");
+    return -1;
+  }
+  
+  struct Base2_64Int bn;
+  if (decimal_string_to_base2_64(str, &bn) != 0) {
     return -1;
   }
 
-  // Representation of the integer in mixed radix system with bases being the
-  // moduli It's going to be of a form u = v_0 + v_1 * m_0 + v_2 * m_0 * m_1 +
-  // ... + v_n * m_0 * m_1 * ... * m_(n-1)
-  uint64_t v[res->len];
+  if (base2_64_to_residue(&bn, minimumSz, res) != 0) {
+    b64_free(&bn);
+    return -1;
+  }
+
+  b64_free(&bn);
+  return 0;
+}
+
+int residue_to_mixed_radix(const struct ResidueInt *res, uint64_t *v) {
+  /*
+   * Converts a residue representation to its mixed radix representation.
+   * This is a helper function for the conversion from residue to Base 2^64
+   * representation and comparators. The mixed radix system has bases being the moduli of the
+   * residue representation, thus having a form u = v_0 + v_1 * m_0 + v_2 * m_0 * m_1 +
+   * ... + v_n * m_0 * m_1 * ... * m_(n-1).
+   */
+
+  if (res == NULL || v == NULL) {
+    fprintf(stderr, "Error: NULL pointer passed to residue_to_mixed_radix\n");
+    return -1;
+  }
+
   for (size_t i = 0; i < res->len; i++) {
     v[i] = res->residues[i];
   }
@@ -186,14 +212,33 @@ int residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn) {
       v[j] = ((uint128_t)v[j] * (uint128_t)c) % modulus;
     }
   }
+  return 0;
+}
 
-  // Convertion to Base 2^64 representation
+int residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn) { 
+  /*
+   * Converts a residue representation back to Base 2^64 integer.
+   * The conversion algorithm uses mixed radix system conversion.
+   * Returns: 0 on success, -1 on error
+   */
+
+  if (res == NULL || bn == NULL) {
+    fprintf(stderr, "Error: NULL pointer passed to residue_to_base2_64\n");
+    return -1;
+  }
+  
+  uint64_t v[res->len];
+  if (residue_to_mixed_radix(res, v) != 0) {
+    return -1;
+  }
+
+  // Conversion to Base 2^64 representation
   if (b64_init(bn, 1) != 0) {
     return -1;
   }
 
   for (size_t i = res->len; i-- > 0;) {
-    uint64_t modulus = precomputed_moduli[i];
+    uint64_t modulus = (1ULL << moduli64[i]) - 1;
     if (b64_mul(bn, modulus, 0) != 0 || b64_mul(bn, 1, v[i]) != 0) {
       fprintf(stderr, "Error: Multiplication failed in residue_to_base2_64\n");
       b64_free(bn);
@@ -256,5 +301,32 @@ int base2_64_decimal_string(const struct Base2_64Int *bn, char *str) {
   strcpy(str, buffer);
   b64_free(&temp);
   
+  return 0;
+}
+
+int residue_to_decimal_string(const struct ResidueInt *res, char *str) {
+  /*
+   * Converts a residue representation back to decimal string.
+   * This function first converts the residue representation to Base 2^64
+   * integer representation and then to decimal string.
+   * Returns: 0 on success, -1 on error
+   */
+
+  if (res == NULL || str == NULL) {
+    fprintf(stderr, "Error: NULL pointer passed to residue_decimal_string\n");
+    return -1;
+  }
+  
+  struct Base2_64Int bn;
+  if (residue_to_base2_64(res, &bn) != 0) {
+    return -1;
+  }
+
+  if (base2_64_decimal_string(&bn, str) != 0) {
+    b64_free(&bn);
+    return -1;
+  }
+
+  b64_free(&bn);
   return 0;
 }

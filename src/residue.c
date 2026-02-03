@@ -1,6 +1,7 @@
 #include "config.h"
 #include "residue.h"
 #include "mp_number.h"
+#include "conversion.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -123,6 +124,49 @@ int residue_mul(const struct ResidueInt *a, const struct ResidueInt *b) {
     a->residues[i] = (uint64_t)(product % modulus);
   }
   
+  return 0;
+}
+
+int residue_cmp(const struct ResidueInt *a, const struct ResidueInt *b, int *result) {
+  /**
+   * Compares two residue representations.
+   * The comparison is done by converting both residues to mixed radix representation
+   * and comparing the resulting values. The function sets *result to -1 if a < b,
+   * 0 if a == b, and 1 if a > b.
+   * Returns: 0 on success, -1 on error
+   */
+  if (a == NULL || b == NULL || result == NULL) {
+    fprintf(stderr, "Error: NULL pointer passed to residue_cmp\n");
+    return -1;
+  }
+  
+  if (a->len != b->len) {
+    fprintf(stderr, "Error: Length mismatch in residue_cmp (a->len=%zu, b->len=%zu)\n", 
+            a->len, b->len);
+    return -1;
+  }
+
+  uint64_t v_a[a->len];
+  uint64_t v_b[b->len];
+  
+  if (residue_to_mixed_radix(a, v_a) != 0) {
+    return -1;
+  }
+  if (residue_to_mixed_radix(b, v_b) != 0) {
+    return -1;
+  }
+
+  for (size_t i = a->len; i-- > 0;) {
+    if (v_a[i] < v_b[i]) {
+      *result = -1;
+      return 0;
+    } else if (v_a[i] > v_b[i]) {
+      *result = 1;
+      return 0;
+    }
+  }
+  
+  *result = 0;
   return 0;
 }
 
