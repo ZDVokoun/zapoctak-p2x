@@ -12,6 +12,6 @@ typedef unsigned _BitInt(128) uint128_t;
 
 // Mersenne moduli used in residue number system
 extern size_t moduli64len;
-extern uint64_t moduli64[15];
+extern uint64_t moduli64[16];
 
 #endif // ZAPOCTAK_CONFIG_H

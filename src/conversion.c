@@ -104,8 +104,19 @@ int base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
 
   for (size_t i = 0; i < res->len; i++) {
     uint64_t modulusPow = moduli64[i];
+    
+    if (modulusPow == 64) {
+      uint128_t sum = 0;
+      for (size_t j = 0; j < bn->len; j++) {
+        sum += bn->limbs[j];
+        sum = (uint64_t)sum + (sum >> 64);
+      }
+      res->residues[i] = (uint64_t)sum + (sum >> 64);
+      continue;
+    }
+    
     uint64_t residue = 0;
-    uint64_t modulus = (1ULL << modulusPow) - 1;
+    uint64_t modulus = (1ULL << (modulusPow % 64)) - 1;
 
     size_t current_bit = 0;
     size_t limb_index = 0;
@@ -200,7 +211,7 @@ int residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn) {
       return -1;
     }
   }
-  
+
   return 0;
 }
 

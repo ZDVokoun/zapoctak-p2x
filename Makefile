@@ -4,7 +4,7 @@
 # Clean: make clean
 
 CC := gcc
-CFLAGS := -Wall -Wextra -O2 -std=c23 -fPIC
+CFLAGS := -Wall -Wextra -g -std=c23 -fPIC
 LDFLAGS := -lm
 
 # Directories

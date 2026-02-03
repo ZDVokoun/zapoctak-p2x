@@ -78,8 +78,13 @@ int residue_add(const struct ResidueInt *a, const struct ResidueInt *b) {
   }
 
   for (size_t i = 0; i < a->len; i++) {
-    uint64_t modulus = (1ULL << moduli64[i]) - 1;
-    a->residues[i] = (a->residues[i] + b->residues[i]) % modulus;
+    if (moduli64[i] == 64) {
+      uint128_t sum = (uint128_t)a->residues[i] + (uint128_t)b->residues[i];
+      a->residues[i] = (uint64_t)sum + (sum >> 64);
+    } else {
+      uint64_t sum = a->residues[i] + b->residues[i];
+      a->residues[i] = (sum & ((1ULL << moduli64[i]) - 1)) + (sum >> moduli64[i]);
+    }
   }
   
   return 0;
@@ -98,8 +103,19 @@ int residue_sub(const struct ResidueInt *a, const struct ResidueInt *b) {
   }
 
   for (size_t i = 0; i < a->len; i++) {
-    uint64_t modulus = (1ULL << moduli64[i]) - 1;
-    a->residues[i] = (a->residues[i] + modulus - b->residues[i]) % modulus;
+    if (moduli64[i] == 64) {
+      if (a->residues[i] >= b->residues[i]) {
+        a->residues[i] = a->residues[i] - b->residues[i];
+        continue;
+      } else {
+        uint128_t diff = a->residues[i] + (uint64_t)(- 1 - b->residues[i]);
+        a->residues[i] = (uint64_t)diff + (diff >> 64);
+      }
+    } else {
+       uint64_t modulus = (1ULL << moduli64[i]) - 1;
+       uint64_t diff = a->residues[i] + modulus - b->residues[i];
+       a->residues[i] = (diff & modulus) + (diff >> moduli64[i]);
+    }
   }
   
   return 0;
@@ -120,7 +136,7 @@ int residue_mul(const struct ResidueInt *a, const struct ResidueInt *b) {
   for (size_t i = 0; i < a->len; i++) {
     uint64_t modulus = (1ULL << moduli64[i]) - 1;
     uint128_t product = (uint128_t)a->residues[i] * (uint128_t)b->residues[i];
-    a->residues[i] = (uint64_t)(product % modulus);
+    a->residues[i] = (product & modulus) + ((product >> moduli64[i]) & modulus) + (product >> (2 * moduli64[i]));
   }
   
   return 0;
