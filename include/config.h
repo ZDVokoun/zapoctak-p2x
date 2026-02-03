@@ -10,8 +10,14 @@
 
 typedef unsigned _BitInt(128) uint128_t;
 
-// Mersenne moduli used in residue number system
+/**
+ * @brief Number of Mersenne moduli used
+ */
 extern size_t moduli64len;
+
+/**
+ * @brief Array of Mersenne moduli bit sizes
+ */
 extern uint64_t moduli64[15];
 
 #endif // ZAPOCTAK_CONFIG_H

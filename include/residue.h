@@ -6,7 +6,7 @@
 #include "config.h"
 
 /**
- * Residue number system representation using Mersenne moduli
+ * @brief Residue number system representation using Mersenne moduli
  */
 struct ResidueInt {
   uint64_t *residues;
@@ -14,54 +14,84 @@ struct ResidueInt {
 };
 
 /**
- * Initialize a ResidueInt with enough moduli to represent minimumSz bits
- * Returns: 0 on success, -1 on memory allocation failure or insufficient moduli capacity
+ * @brief Initialize a `ResidueInt` with enough moduli to represent minimumSz bits
+ *
+ * @param res Output residue number to initialize
+ * @param minimumSz Minimum number of bits to represent
+ * @return 0 on success
+ * @retval -1 if memory allocation fails or moduli capacity is insufficient
  */
 int init_residue(struct ResidueInt *res, size_t minimumSz);
 
 /**
- * Free resources allocated for a ResidueInt
+ * @brief Free resources allocated for a `ResidueInt`
+ *
+ * @param res Residue number to free
  */
 void residue_free(struct ResidueInt *res);
 
 /**
- * Copy a ResidueInt number
- * Returns: 0 on success, -1 on memory allocation failure
+ * @brief Copy a `ResidueInt` number
+ *
+ * @param dst Destination residue number
+ * @param src Source residue number
+ * @return 0 on success
+ * @retval -1 if memory allocation fails
  */
 int residue_copy(struct ResidueInt *dst, const struct ResidueInt *src);
 
 /**
- * Add two residue numbers: a = a + b (in-place)
- * PRECONDITION: a->len == b->len
- * Returns: 0 on success, -1 if lengths don't match or pointers are NULL
+ * @brief Add two residue numbers: a = a + b (in-place)
+ *
+ * @param a Left operand and output (in-place)
+ * @param b Right operand
+ * @return 0 on success
+ * @retval -1 if lengths don't match or pointers are NULL
+ * @pre a->len == b->len
  */
 int residue_add(const struct ResidueInt *a, const struct ResidueInt *b);
 
 /**
- * Subtract two residue numbers: a = a - b (in-place)
- * PRECONDITION: a->len == b->len
- * Returns: 0 on success, -1 if lengths don't match or pointers are NULL
+ * @brief Subtract two residue numbers: a = a - b (in-place)
+ *
+ * @param a Left operand and output (in-place)
+ * @param b Right operand
+ * @return 0 on success
+ * @retval -1 if lengths don't match or pointers are NULL
+ * @pre a->len == b->len
  */
 int residue_sub(const struct ResidueInt *a, const struct ResidueInt *b);
 
 /**
- * Multiply two residue numbers: a = a * b (in-place)
- * PRECONDITION: a->len == b->len
- * Returns: 0 on success, -1 if lengths don't match or pointers are NULL
+ * @brief Multiply two residue numbers: a = a * b (in-place)
+ *
+ * @param a Left operand and output (in-place)
+ * @param b Right operand
+ * @return 0 on success
+ * @retval -1 if lengths don't match or pointers are NULL
+ * @pre a->len == b->len
  */
 int residue_mul(const struct ResidueInt *a, const struct ResidueInt *b);
 
 /**
- * Compares two residue representations.
- * The comparison is done by converting both residues to mixed radix representation
- * and comparing the resulting values. The function sets *result to -1 if a < b,
- * 0 if a == b, and 1 if a > b.
- * Returns: 0 on success, -1 on error
+ * @brief Compare two residue representations
+ *
+ * The comparison is done by converting both residues to mixed radix
+ * representation and comparing the resulting values. The function sets
+ * *result to -1 if a < b, 0 if a == b, and 1 if a > b.
+ *
+ * @param a Left operand
+ * @param b Right operand
+ * @param result Output comparison result (-1, 0, 1)
+ * @return 0 on success
+ * @retval -1 on error
  */
 int residue_cmp(const struct ResidueInt *a, const struct ResidueInt *b, int *result);
 
 /**
- * Print ResidueInt representation (debug)
+ * @brief Print `ResidueInt` representation (debug)
+ *
+ * @param res Residue number to print
  */
 void print_residue(const struct ResidueInt *res);
 
