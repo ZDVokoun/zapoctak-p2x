@@ -1,8 +1,8 @@
-#include "config.h"
 #include "mp_number.h"
-#include <string.h>
-#include <stdlib.h>
+#include "config.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 int b64_init(struct Base2_64Int *bn, size_t initial_cap) {
   if (bn == NULL) {
@@ -58,7 +58,8 @@ int b64_expand(struct Base2_64Int *bn, size_t new_cap) {
     fprintf(stderr, "Error: Memory reallocation failed in b64_expand\n");
     return -1;
   }
-  memset(new_limbs + bn->capacity, 0, (new_cap - bn->capacity) * sizeof(uint64_t));
+  memset(new_limbs + bn->capacity, 0,
+         (new_cap - bn->capacity) * sizeof(uint64_t));
   bn->limbs = new_limbs;
   bn->capacity = new_cap;
   return 0;
@@ -79,11 +80,7 @@ void print_base2_64(const struct Base2_64Int *bn) {
 int b64_mul(struct Base2_64Int *bn, uint64_t multiplier, uint64_t addend) {
   uint128_t carry = (uint128_t)addend;
 
-  for (size_t i = 0; i < bn->capacity; i++) {
-    // Early exit conditions
-    if (carry == 0 && bn->limbs[i] == 0)
-      break;
-
+  for (size_t i = 0; i < bn->len; i++) {
     // Early exit condition when doing addition only
     if (carry == 0 && multiplier == 1)
       break;
@@ -99,9 +96,9 @@ int b64_mul(struct Base2_64Int *bn, uint64_t multiplier, uint64_t addend) {
 
   if (carry > 0) {
     if (bn->len >= bn->capacity && b64_expand(bn, bn->capacity * 2) != 0) {
-        return -1;
-      }
-    
+      return -1;
+    }
+
     bn->limbs[bn->len] = (uint64_t)carry;
     bn->len++;
   }
@@ -126,7 +123,7 @@ uint64_t fast_div128_64(uint64_t high, uint64_t low, uint64_t divisor,
 }
 
 int base2_64_divmod(struct Base2_64Int *bn, uint64_t divisor,
-                     uint64_t *remainder) {
+                    uint64_t *remainder) {
   if (bn == NULL) {
     fprintf(stderr, "Error: NULL pointer passed to base2_64_divmod\n");
     return -1;
@@ -135,7 +132,7 @@ int base2_64_divmod(struct Base2_64Int *bn, uint64_t divisor,
     fprintf(stderr, "Error: Division by zero in base2_64_divmod\n");
     return -1;
   }
-  
+
   uint64_t rem = 0;
 
   for (size_t i = bn->len; i-- > 0;) {
@@ -148,6 +145,6 @@ int base2_64_divmod(struct Base2_64Int *bn, uint64_t divisor,
 
   if (bn->len >= 1 && bn->limbs[bn->len - 1] == 0)
     bn->len--;
-  
+
   return 0;
 }
