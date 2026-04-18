@@ -3,9 +3,12 @@
 \usepackage[czech]{babel}
 \usepackage{fontspec}
 \usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
 \usepackage{graphicx}
 \usepackage{geometry}
 \usepackage{hyperref}
+\usepackage{minted}
 
 \geometry{a4paper, margin=1in}
 
@@ -15,6 +18,7 @@
 \def\MyDate{\today}
 
 \newtheorem{theorem}{Věta}
+\newtheorem{claim}{Tvrzení}
 
 \begin{document}
 
@@ -50,27 +54,244 @@
 
 \section{Úvod}
 
-K zápočtovému programu jsem si vybral téma Reziduální aritmetika, jehož součástí je implementace provádění aritmetických operací s dlouhými čísly za pomocí poznatků o zbytcích po dělení. Každé číslo v určitém rozmezí umíme jednoznačně vyjádřit jako seznam zbytků po dělení několika nesoudělnými čísly a s tímto seznamem pak velmi efektivně sčítat, odčítat a násobit.
+K zápočtovému programu jsem si vybral téma Reziduální aritmetika, jehož
+součástí je implementace provádění aritmetických operací s dlouhými čísly za
+pomocí poznatků o zbytcích po dělení. Každé číslo v určitém rozmezí umíme
+jednoznačně vyjádřit jako seznam zbytků po dělení několika nesoudělnými čísly a
+s tímto seznamem pak velmi efektivně sčítat, odčítat a násobit.
 
-Vytvořil jsem tedy knihovnu v jazyce C, která implementuje veškeré potřebné operace, jako je převod z desítkového zápisu na zápis se zbytky a naopak a pak operace sčítání, odčítání, násobení a porovnávání.
+Vytvořil jsem tedy knihovnu v jazyce C, která implementuje veškeré potřebné
+operace, jako je převod z desítkového zápisu na zápis se zbytky a naopak a pak
+operace sčítání, odčítání, násobení a porovnávání.
 
-\section{Teorie}
+Tato celá práce stojí na poznatcích uvedené v knize {\it The Art of Computer
+Programming, Volume 2, Seminumerical algorithms} a hlavně na kapitolách 4.3.1
+{\it Classical algorithms}, 4.3.2 {\it Modular arithmetic} a 4.4 {\it Radix
+conversion}.
 
-Celý tento program stojí na poznatku z teorie čísel, které se nazývá Čínská zbytková věta. Níže je její znění:
+\section{Užívání}
+
+Program předpokládá, že knihovna bude používána na Linuxu s procesory na
+architektuře x64. Zároveň se předpokládá, že tento program se bude kompilovat
+pomocí GCC.
+
+\inputminted[linenos]{c}{../examples/example_square.c}
+
+\section{Teorie a implementace}
+
+Celý tento program stojí na poznatku z teorie čísel, které se nazývá Čínská
+zbytková věta. Níže je její znění:
 
 \begin{theorem}[Čínská zbytková věta]
-Nechť $n_1, n_2, \dots, n_k$ jsou po dvou nesoudělná přirozená čísla, tj. $\gcd(n_i, n_j) = 1$ pro $i \neq j$. Označme $N = n_1 n_2 \dots n_k$. Potom pro libovolná celá čísla $a_1, a_2, \dots, a_k$ má soustava kongruencí
+Nechť $m_1, m_2, \dots, m_k$ jsou po dvou nesoudělná přirozená čísla, tj.
+  $\gcd(m_i, m_j) = 1$ pro $i \neq j$. Označme $M = m_1 m_2 \dots m_k$. Potom
+  pro libovolná celá čísla $a_1, a_2, \dots, a_k$ má soustava kongruencí
 $$
 \begin{aligned}
-    x &\equiv a_1 \pmod{n_1} \\
-    x &\equiv a_2 \pmod{n_2} \\
+    x &\equiv a_1 \pmod{m_1} \\
+    x &\equiv a_2 \pmod{m_2} \\
       &\vdots \\
-    x &\equiv a_k \pmod{n_k}
+    x &\equiv a_k \pmod{m_k}
 \end{aligned}
 $$
-řešení, které je určeno jednoznačně modulo $N$.
+řešení, které je určeno jednoznačně modulo $M$.
 \end{theorem}
 
+Z této věty pak plyne to, že čísla od 0 po $M-1$ umíme vyjádřit jako vektor
+zbytků po dělení $(a_1, a_2, \dots, a_k)$. Zároveň můžeme vypozorovat, že pokud
+chceme sčítat, odčítat a násobit, stačí nám v tomto vyjádření provádět danou
+operaci po složkách. Když totiž pro dělitel $m_i$ máme pro čísla $x$ a $y$
+zbytky $a_i$ a $b_i$, platí kongruence:
 
+$$ x \equiv a_i \pmod{m_i} $$ $$ y \equiv b_i \pmod{m_i} $$
+
+Z pravidel pro kongruence můžeme obě kongruence prostě sečíst (či vynásobit
+nebo odečíst):
+
+$$ x + y \equiv a_i + b_i \pmod{m_i} $$
+
+Vidíme tedy, že provádět operace s tímto tvarem jde snadno a efektivně. Třeba
+ale dělení by vyžadovala pro každý zbytek zjistit modulární inverz, což je ale
+drahá operace. Proto operace dělení není implementována.
+
+Pro zvýšenou efektivitu nebudu ale užívat jakákoli modula, nýbrž modula ve
+tvaru $m_i = 2^{\ell} - 1$. Tehdy můžeme při výpočtech využít jednodušších
+operací k efektivnějšímu výpočtu, protože za předpokladu, že $0 \leq a_i,b_i <
+m_i = 2^{\ell} - 1$ platí
+
+$$
+a_i + b_i \equiv ((a_i+b_i)\bmod 2^{\ell})+[a_i +b_i\geq 2^{\ell}] \pmod{m_i},
+$$
+
+$$
+a_i \cdot b_i \equiv (a_i b_i \bmod 2^{\ell}) + \lfloor a_i b_i /2^{\ell}\rfloor \pmod{m_i},
+$$
+
+$$
+a_i - b_i \equiv ((a_i -b_i)\bmod 2^{\ell})-[a_i <b_i] \pmod{m_i},
+$$
+
+kde pravé výrazy těchto kongruencí jsou vždy v intervalu $[0, m_i]$ a výrazy v
+hranatých závorkách se vyhodnotí na jedničku, pokud platí, jinak na nulu. Stačí
+tedy pak jen kontrolovat, zda výsledek je roven $m_i$ a dostaneme zbytek po
+dělení bez použití operátoru \verb|%|.
+
+Pro výběr těchto modulů jsou využil následujícího vztahu:
+
+\begin{claim}
+  \label{claim:1}
+  Nechť $e,f,g \in \mathbb{Z}^+_0$. Pak platí:
+$$
+  2^e \equiv 2^f \pmod{2^g - 1} \quad \Leftrightarrow \quad e \equiv f \pmod{g}
+$$
+$$
+  \gcd(2^e - 1, 2^f - 1) = 2^{\gcd(e,f)} - 1
+$$
+\end{claim}
+\begin{proof}
+  Nejprve dokážeme implikaci $\Leftarrow$ prvního vztahu. Z definice $e \equiv
+  f \pmod{g}$ víme, že existuje $k \in \mathbb{Z}$ takový, že $e = k g + f$.
+  Pak platí, že
+
+  $$
+  2^e \equiv 2^{kg+f} \equiv 2^f \pmod{2^g - 1}.
+  $$
+
+  Teď se podíváme na implikaci $\Rightarrow$. Kongruenci ze vztahu upravíme:
+  $$
+    2^e \equiv 2^f \pmod{2^g - 1}
+  $$
+  $$
+    2^e \cdot 2^{g-f} \equiv 2^f \cdot 2^{g-f} \pmod{2^g - 1}
+  $$
+  $$
+    2^{e-f} \equiv 1 \equiv 2^g \pmod{2^g - 1}
+  $$
+
+  Odtud už vidíme, že pro nějaké $k \in \mathbb{Z}$ platí $e-f = k g$, nutně
+  tedy platí $e \equiv f \pmod{g}$.
+
+  Druhý vztah pak plyne z prvního vztahu a Euklidova algoritmu.
+\end{proof}
+
+Modula jsem tedy vybral tak, že jsem našel nesoudělná kladná celá čísla, které
+mají co největší součet a jsou menší než 64 (aby nedocházelo k přetečení), a
+následně využil tvrzení \ref{claim:1}.
+
+\subsection{Binární zápis dlouhého čísla}
+
+Teď je potřeba zjistit, jak do tohoto tvaru dlouhá čísla převádět a taky jak je
+převádět zpět. Na to ale potřebujeme nějakou binární reprezentaci dlouhých
+čísel, do které můžeme převádět čísla zapsané v desítkové soustavě a naopak ze
+kterého můžeme převádět do desítkové soustavy. Ty budu reprezentovat v číselné
+soustavě o základu $2^{64}$, což můžeme implementovat jako vektor 64-bitových
+bezznaménkových čísel.
+
+Teď na převody z desítkové soustavy a zpět a na převody na zbytkový tvar a zpět
+budeme potřebovat, aby toto dlouhé číslo podporovalo přičtení 64-bitového čísla
+a vynásobení a vydělení se zbytkem 64-bitovým číslem. Oboje je implementováno
+stejně, jako bychom sčítali, násobili či dělili známými školními algoritmy, jen
+čísla nemáme v desítkové soustavě, ale v soustavě o základu $2^{64}$. Pro
+sčítání tedy přičteme dané číslo k nejméně významné pozici, carry přičteme k
+vyšší pozici atd. Podobně u násobení vynásobíme \uv{číslici} na nejnižší
+pozici, carry přičteme k součinu na vyšší pozici atd.
+
+\subsection{Převod na zbytkový tvar}
+
+Pro efektivní převod na zbytkový tvar využijeme toho, že binární číslo dokážeme
+jednoduše vyjádřit v číselné soustavě se základem $2^{\ell}$ tak, že postupně
+získáme prvních $j$ nejméně významných bitů vstupního čísla $x$, pak dalších
+$j$ bitů atd. Zbytek po modulu $m_i = 2^{\ell} - 1$ vyjádříme následovně --
+získáme čísla $0 \leq \alpha_0, \alpha_1, \dots, \alpha_m < 2^{\ell}$ taková,
+aby platilo
+
+$$
+x = \alpha_m \cdot (2^{\ell})^m + \dots + \alpha_1 \cdot 2^{\ell} + \alpha_0
+$$
+
+Po vymodulení pak dostaneme:
+
+$$
+x \equiv \alpha_m \cdot (2^{\ell})^m + \dots + \alpha_1 \cdot 2^{\ell} + \alpha_0 
+  \equiv \alpha_m + \dots + \alpha_1 + \alpha_0 
+  \equiv a_i \pmod{2^{\ell} - 1}
+$$
+
+Stačí nám teda čísla $\alpha_0, \alpha_1, \dots, \alpha_m$ sečíst a získat
+zbytek po dělení $m_i$.
+
+\subsection{Převod ze zbytkového tvaru zpět}
+
+Nejprve si dokážeme tvrzení, které nám nemalou část výpočtu zjednodušší a
+urychlí:
+
+\begin{claim}
+  Nechť $c,d,e,f \in \mathbb{Z}^+_0$, $e \bmod f = d$ a $ce \bmod f = 1$. Pak platí, že
+  $$
+  \left((1 + 2^d + \cdots + 2^{(c-1)d}) \cdot (2^e - 1)\right) \bmod (2^f - 1) = 1.
+  $$
+\end{claim}
+\begin{proof}
+  Protože $e \equiv d \pmod{f}$, pak podle tvrzení \ref{claim:1} platí, že $2^e
+  \equiv 2^d \pmod{2^f - 1}$, a proto:
+
+  $$
+  \left((1 + 2^d + \cdots + 2^{(c-1)d}) \cdot (2^e - 1)\right)  
+    \equiv \left((1 + 2^e + \cdots + 2^{(c-1)e}) \cdot (2^e - 1)\right)
+    \equiv 2^{ce} - 1 \pmod{2^f - 1}
+  $$
+
+  Po dosazení $ce \bmod f = 1$ dostaneme
+
+  $$
+  \left((1 + 2^d + \cdots + 2^{(c-1)d}) \cdot (2^e - 1)\right) 
+    \equiv 2^{ce} - 1 \equiv 1 \pmod{2^f - 1},
+  $$
+
+  jak jsme chtěli.
+\end{proof}
+
+Tohoto tvrzení využijeme pro výpočet konstant $c_{ij}$ pro $1\le i<j\le k$, kde
+$$c_{ij} m_i \equiv 1 \pmod{m_j}.$$  
+
+Počítáme tedy modulární inverze $m_i$ modulo $m_j$. Teď budeme chtít získat
+takové vyjádření $x$, aby platilo
+
+$$
+0 \leq x<M, \quad x \equiv a_i \pmod{m_{i}} \quad \text{pro } 1 \le i \le k,
+$$  
+
+$$
+x=v_k m_{k-1} \dots m_2 m_1 + \dots + v_3 m_2 m_1 +v_2 m_1 +v_1,
+$$
+
+kde $0 \leq v_i \leq m_i$ pro $1 \leq i \leq k$. Když do každé z kongruencí
+dosadíme a upravíme, zjistíme, že hodnoty níže kongruenci a všechny podmínky
+splňují:
+
+$$v_{1} = a_{1}\bmod m_{1},$$
+$$v_{2} = (a_{2}-v_{1})c_{12}\bmod m_{2},$$
+$$v_{3} = ((a_{3}-v_{1})c_{13}-v_{2})c_{23}\bmod m_{3},$$  
+$$\vdots$$
+$$v_{k} = (\dots((a_{k}-v_{1})c_{1k}-v_{2})c_{2k}-\dots-v_{k-1})c_{(k-1)k}\bmod m_{k}.$$  
+
+Protože pro každé $1 \leq i \leq k$ platí $0 \leq v_i \leq m_i$, výsledné $x$
+není nikdy větší než $M$. Dále platí, že každý vektor zbytků taky dá jedinečné
+číslo $x$, protože platí $x \equiv a_i \pmod{m_i}$. A protože hodnoty $v_1,
+v_2, \dots, v_k$ mohou dohromady dosahovat až $m_1 \cdots m_2 \cdots m_k = M$
+různých hodnot, pro každé $x$ existuje vektor zbytků, které po této proceduře
+vrátí toto číslo $x$ zpět.
+
+Tímto způsobem jsme reprezentovali číslo $x$ ve smíšené soustavě (mixed-radix),
+ze které lze číslo převést do binární soustavy tak, že vyhodnotíme reprezentaci
+$x$ pomocí Hornerova schématu takto:
+
+$$
+(\cdots ((v_k m_{k-1} + v_{k-1}) m_{k-2}) + \cdots + v_1) m_0 + v_0 = x
+$$
+
+Pokud by nám stačilo jen dvojici čísel v reprezentaci pomocí vektoru zbytků,
+nepotřebujeme tento výraz vyhodnocovat. Stačí akorát porovnat reprezentace ve
+smíšených soustavách lexikograficky.
 
 \end{document}

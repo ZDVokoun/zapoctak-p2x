@@ -6,3 +6,5 @@ docs/build/
 *.out
 *.lof
 *.toc
+*.pdf
+docs/_minted
