@@ -16,16 +16,20 @@ BINDIR := $(BUILDDIR)/bin
 OBJDIR := $(BUILDDIR)/obj
 
 # Library files
-LIB_SOURCES := $(SRCDIR)/config.c $(SRCDIR)/mp_number.c $(SRCDIR)/residue.c $(SRCDIR)/conversion.c
+LIB_SOURCES := $(wildcard $(SRCDIR)/*.c)
+LIB_HEADERS := $(wildcard $(INCDIR)/*.h)
 LIB_OBJECTS := $(addprefix $(OBJDIR)/,$(notdir $(LIB_SOURCES:.c=.o)))
 LIBRARY := $(BUILDDIR)/libzapoctak.a
 
 # Example files
-EXAMPLES := example_b64_conversion example_residue_conversion example_multiply example_add example_subtract example_square
-EXAMPLE_SOURCES := $(addprefix $(EXDIR)/,$(addsuffix .c,$(EXAMPLES)))
+EXAMPLE_SOURCES := $(wildcard $(EXDIR)/*.c)
+EXAMPLES := $(basename $(notdir $(EXAMPLE_SOURCES)))
 EXAMPLE_BINS := $(addprefix $(BINDIR)/,$(EXAMPLES))
 
-.PHONY: all examples clean distclean help
+# Docs related
+DOCSBUILD := docs/build
+
+.PHONY: all examples clean distclean help docs
 
 # Default target
 all: $(LIBRARY)
@@ -33,6 +37,16 @@ all: $(LIBRARY)
 
 examples: $(EXAMPLE_BINS)
 	@echo "All examples built"
+
+docs: $(DOCSBUILD)/docs.pdf $(DOCSBUILD)/html
+	@echo "Docs generated"
+
+$(DOCSBUILD)/html: $(LIB_HEADERS) $(DOCSBUILD)
+	@doxygen
+
+$(DOCSBUILD)/docs.pdf: docs/docs.tex $(DOCSBUILD)
+	@xelatex -output-directory=$(DOCSBUILD) -shell-escape docs/docs.tex
+	@xelatex -output-directory=$(DOCSBUILD) -shell-escape docs/docs.tex
 
 # Build library
 $(LIBRARY): $(LIB_OBJECTS) | $(BUILDDIR)
@@ -53,31 +67,13 @@ $(BINDIR)/%: $(EXDIR)/%.c $(LIBRARY) | $(BINDIR)
 	@echo "Built example: $@"
 
 # Create directories
-$(BUILDDIR) $(OBJDIR) $(BINDIR):
+$(BUILDDIR) $(OBJDIR) $(BINDIR) $(DOCSBUILD):
 	@mkdir -p $@
 
 # Clean build artifacts
-clean:
+clean: cleandocs
 	rm -rf $(BUILDDIR)
 	@echo "Cleaned build artifacts"
 
-# Full distclean
-distclean: clean
-	@echo "Full clean complete"
-
-# Help target
-help:
-	@echo "zapoctak - Multi-precision arithmetic with residue number system"
-	@echo ""
-	@echo "Available targets:"
-	@echo "  make              - Build the static library"
-	@echo "  make examples     - Build example programs"
-	@echo "  make clean        - Remove build artifacts"
-	@echo "  make distclean    - Full clean"
-	@echo "  make help         - Show this help message"
-	@echo ""
-	@echo "Project structure:"
-	@echo "  zapoctak/include/  - Public header files"
-	@echo "  zapoctak/src/      - Library source files"
-	@echo "  zapoctak/examples/ - Example programs"
-	@echo "  build/             - Build output directory"
+cleandocs:
+	rm -rf $(DOCSBUILD)

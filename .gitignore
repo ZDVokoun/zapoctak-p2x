@@ -7,4 +7,4 @@ docs/build/
 *.lof
 *.toc
 *.pdf
-docs/_minted
+*_minted
