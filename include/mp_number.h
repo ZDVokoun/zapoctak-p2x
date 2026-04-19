@@ -35,6 +35,13 @@ int b64_init(struct Base2_64Int *bn, size_t initial_cap);
 void b64_free(struct Base2_64Int *bn);
 
 /**
+ * @brief Set a `Base2_64Int` number to zero
+ *
+ * @param bn Number to set to zero
+ */
+void b64_empty(struct Base2_64Int *bn);
+
+/**
  * @brief Print `Base2_64Int` representation (debug)
  *
  * @param bn Number to print

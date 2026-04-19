@@ -5,7 +5,8 @@
 #include <stdint.h>
 
 #if __BITINT_MAXWIDTH__ < 128
-#error "This C23 compiler does not support 128-bit integers needed for fast Base 2^64 arithmetic."
+#error                                                                         \
+    "This C23 compiler does not support 128-bit integers needed for fast Base 2^64 arithmetic."
 #endif
 
 typedef unsigned _BitInt(128) uint128_t;
@@ -18,6 +19,6 @@ extern size_t moduli64len;
 /**
  * @brief Array of Mersenne moduli bit sizes
  */
-extern uint64_t moduli64[15];
+extern uint64_t moduli64[16];
 
 #endif // ZAPOCTAK_CONFIG_H

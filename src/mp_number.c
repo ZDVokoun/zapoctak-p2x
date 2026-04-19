@@ -19,6 +19,15 @@ int b64_init(struct Base2_64Int *bn, size_t initial_cap) {
   return 0;
 }
 
+void b64_empty(struct Base2_64Int *bn) {
+  if (bn == NULL) {
+    return;
+  }
+  for (size_t i = 0; i < bn->capacity; i++)
+    bn->limbs[i] = 0;
+  bn->len = 0;
+}
+
 void b64_free(struct Base2_64Int *bn) {
   if (bn == NULL) {
     return;
