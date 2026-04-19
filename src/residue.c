@@ -144,13 +144,6 @@ int residue_mul(const struct ResidueInt *a, const struct ResidueInt *b) {
 
 int residue_cmp(const struct ResidueInt *a, const struct ResidueInt *b,
                 int *result) {
-  /**
-   * Compares two residue representations.
-   * The comparison is done by converting both residues to mixed radix
-   * representation and comparing the resulting values. The function sets
-   * *result to -1 if a < b, 0 if a == b, and 1 if a > b. Returns: 0 on success,
-   * -1 on error
-   */
   if (a == NULL || b == NULL || result == NULL) {
     fprintf(stderr, "Error: NULL pointer passed to residue_cmp\n");
     return -1;
@@ -162,6 +155,9 @@ int residue_cmp(const struct ResidueInt *a, const struct ResidueInt *b,
             a->len, b->len);
     return -1;
   }
+
+  // Convert residue representation to mixed radix system
+  // in which the numbers can be compared lexicographically
 
   uint64_t v_a[a->len];
   uint64_t v_b[b->len];
