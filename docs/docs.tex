@@ -47,7 +47,6 @@
 \pagenumbering{roman}
 
 \tableofcontents
-% \listoffigures
 
 \clearpage
 \pagenumbering{arabic}
@@ -73,7 +72,86 @@ conversion}.
 
 Program předpokládá, že knihovna bude používána na Linuxu s procesory na
 architektuře x64. Zároveň se předpokládá, že tento program se bude kompilovat
-pomocí GCC.
+pomocí GCC. Celkově na kompilaci jsou potřeba tyto závislosti:
+
+\begin{itemize}
+  \item \verb|make|, \verb|gcc|
+  \item \verb|texlive|, \verb|python|, \verb|doxygen|
+\end{itemize}
+
+Následně příkaz \verb|make| nabízí následující příkazy:
+
+\begin{itemize}
+  \item \verb|make library| -- sestaví staticky linkovanou knihovnu do
+    \verb|build/libzapoctak.a|
+  \item \verb|make sharedlibrary| -- sestaví dynamicky linkovanou knihovnu do
+    \verb|build/libzapoctak.so|
+  \item \verb|make examples| -- sestaví příklady programů ve složce
+    \verb|examples| do \verb|build/examples|
+  \item \verb|make docs| -- sestaví jednu celkovou dokumentaci programu v
+    souboru \verb|docs/build/docs.pdf| a pak API dokumentaci vygenerovanou
+    pomocí \verb|doxygen| v \verb|docs/build/html/index.html|
+  \item \verb|make| a \verb|make all| -- spustí všechny příkazy výše
+  \item \verb|make clean| -- smaže kompilované soubory spojené s programem
+  \item \verb|make cleandocs| -- smaže kompilované soubory spojené s dokumentací
+\end{itemize}
+
+V knihovně nás pak zajímají hlavně následující hlavičky:
+
+\begin{itemize}
+  \item \verb|conversion.h| -- obsahuje funkce na převody mezi používanými reprezentacemi,
+  \item \verb|residue.h| -- implementuje reziduové reprezentace čísla a operace na ní,
+\end{itemize}
+
+Osnova postupu, jak se s touto knihovnou zachází, když dostaneme na vstupu
+dlouhé číslo v desítkové soustavě, bude typicky následovná:
+
+\begin{enumerate}
+  \item Vytvoříme strukturu pro ukládání čísla jako vektor zbytků. Do něj převedeme řetězec
+    zápisu v desítkové soustavě.
+  \item Provedeme požadované operace na číslo v reziduovém systému.
+  \item Převedeme číslo v reziduovém systému do do desítkového zápisu.
+  \item Vyčistíme po sobě.
+\end{enumerate}
+
+První krok lze dělat dvěma způsoby. Nejprve ale vždy začneme tím, že si
+vytvoříme struktury \verb|ResidueInt|. Pak nejpřímočařejší postup je použít
+funkci \verb|decimal_string_to_residue()|. Tato funkce za nás udělá dva
+mezikroky, kdy převádí řetězec nejprve do multi-precision reprezentace a tu pak
+do reziduální reprezentace. Na to ale musí při každém zavolání si inicializovat
+multi-precision číslo (strukturu \verb|Base2_64Int|, která se nachází v
+hlavičce \verb|mp_number.h|). Pro převádění velkého množství čísel se může
+vyplatit udělat tyto mezikroky manuálně, jak je ukázáno v příkladu níže.
+
+Při převodu do reziduové reprezentace nebo při inicializaci reziduové
+reprezentace musíme vždy nastavit minimální velikost, kterou musí být reziduová
+reprezentace schopna reprezentovat, a to v bitech a u všech čísel, které spolu
+budou nějak interagovat, na stejnou hodnotu. Při nastavení správné velikosti se
+zamezí přetečení a zároveň kompatibilita jednotlivých reprezentací
+(implemetované operace totiž nepodporují operace nad reprezentacemi s různým
+počtem zbytků). Mějte ale na paměti, že v této implemetaci je možno vyjádřit
+jen čísla o méně než 653 bitech.
+
+Co se týče operací, které můžeme dělat na čísle v reziduovém systému, jsou
+implementovány funkce na kopírování, sčítání, odčítání, násobení a porovnávání,
+z nichž operace porovnání je ta nejdražší (podrobnosti v teorii). Je důležité
+podotknout, že operace sčítání, odčítání a násobení jsou in-place, tedy
+výsledky operace se uloží do prvního argumentu (třeba operace sčítání provede
+$a := a+b$). 
+
+Krok třetí je analogický k prvnímu kroku. Buď lze udělat funkcí
+\verb|residue_to_decimal_string()|, nebo se zase udělají dva mezikroky manuálně
+podobně jako v prvním kroku.
+
+Čištění po sobě se provádí funkcí \verb|residue_free()| pro reziduální
+reprezentaci, pro multi-precision reprezentaci zase pomocí funkce
+\verb|b64_free()|.
+
+Podrobnosti o funkcích, které dává knihovna k dispozici, lze najít v API dokumentaci.
+
+\subsection{Příklad užití}
+
+Níže lze vidět příklad užití na výpočet druhé mocniny velkého čísla.
 
 \inputminted[linenos]{c}{examples/example_square.c}
 

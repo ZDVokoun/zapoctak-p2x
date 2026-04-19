@@ -1,7 +1,7 @@
-#include <stdio.h>
 #include "conversion.h"
 #include "mp_number.h"
 #include "residue.h"
+#include <stdio.h>
 
 /**
  * Example: Square a large decimal number using residue number system
@@ -13,7 +13,7 @@
  * 5. Output as decimal string
  */
 int main() {
-  struct Base2_64Int bn1, result;
+  struct Base2_64Int bn;
   struct ResidueInt res1, res2;
 
   // Example: 123456789123456789987654321^2
@@ -22,17 +22,21 @@ int main() {
   printf("=== Multi-Precision Arithmetic using Residue Number System ===\n\n");
 
   printf("Converting '%s' to Base 2^64...\n", num1_str);
-  decimal_string_to_base2_64(num1_str, &bn1);
-  print_base2_64(&bn1);
+  decimal_string_to_base2_64(num1_str, &bn);
+  print_base2_64(&bn);
 
   printf("\n=== Converting to Residue Representation ===\n");
 
   // Estimate required bits for result (both numbers have similar size)
-  size_t required_bits = 2 * bn1.len * 64;
+  size_t required_bits = 2 * bn.len * 64;
 
   printf("Converting first number to residue representation...\n");
-  base2_64_to_residue(&bn1, required_bits, &res1);
+  base2_64_to_residue(&bn, required_bits, &res1);
   print_residue(&res1);
+
+  printf("Making the Base 2^64 number zero...\n");
+  b64_empty(&bn);
+  print_base2_64(&bn);
 
   printf("Copy the number for power operation...\n");
   residue_copy(&res2, &res1);
@@ -44,18 +48,17 @@ int main() {
   print_residue(&res1);
 
   printf("\n=== Converting Result Back to Base 2^64 ===\n");
-  residue_to_base2_64(&res1, &result);
-  print_base2_64(&result);
+  residue_to_base2_64(&res1, &bn);
+  print_base2_64(&bn);
 
   printf("\n=== Final Result ===\n");
   char result_str[4096];
-  base2_64_decimal_string(&result, result_str);
+  base2_64_decimal_string(&bn, result_str);
   printf("Result: %s\n", result_str);
   printf("Expected: 15241578780673678759487883219326322200731595789971041\n");
 
   // Cleanup
-  b64_free(&bn1);
-  b64_free(&result);
+  b64_free(&bn);
   residue_free(&res1);
   residue_free(&res2);
 
