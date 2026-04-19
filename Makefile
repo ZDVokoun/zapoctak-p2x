@@ -1,11 +1,9 @@
-# Makefile for zapoctak project
-# Build: make
-# Build examples: make examples
-# Clean: make clean
-
 CC := gcc
-CFLAGS := -Wall -Wextra -g -std=c23 -fPIC
-LDFLAGS := -lm
+
+CFLAGS := -Wall -Wextra -g -std=c23 -fPIC -MMD -MP
+
+LDFLAGS := 
+LDLIBS := -lm
 
 # Directories
 SRCDIR := src
@@ -19,7 +17,9 @@ OBJDIR := $(BUILDDIR)/obj
 LIB_SOURCES := $(wildcard $(SRCDIR)/*.c)
 LIB_HEADERS := $(wildcard $(INCDIR)/*.h)
 LIB_OBJECTS := $(addprefix $(OBJDIR)/,$(notdir $(LIB_SOURCES:.c=.o)))
+
 LIBRARY := $(BUILDDIR)/libzapoctak.a
+SHARED_LIBRARY := $(BUILDDIR)/libzapoctak.so
 
 # Example files
 EXAMPLE_SOURCES := $(wildcard $(EXDIR)/*.c)
@@ -29,41 +29,42 @@ EXAMPLE_BINS := $(addprefix $(BINDIR)/,$(EXAMPLES))
 # Docs related
 DOCSBUILD := docs/build
 
-.PHONY: all examples clean distclean help docs
+.PHONY: all examples clean cleandocs docs
 
-# Default target
-all: $(LIBRARY)
-	@echo "Static library built: $(LIBRARY)"
+# Default target now builds both libraries
+all: $(LIBRARY) $(SHARED_LIBRARY)
+	@echo "Libraries built: $(LIBRARY) and $(SHARED_LIBRARY)"
 
 examples: $(EXAMPLE_BINS)
 	@echo "All examples built"
 
-docs: $(DOCSBUILD)/docs.pdf $(DOCSBUILD)/html
+docs: $(DOCSBUILD)/docs.pdf $(DOCSBUILD)/.doxygen_done
 	@echo "Docs generated"
 
-$(DOCSBUILD)/html: $(LIB_HEADERS) $(DOCSBUILD)
+$(DOCSBUILD)/.doxygen_done: $(LIB_HEADERS) | $(DOCSBUILD)
 	@doxygen
+	@touch $@
 
-$(DOCSBUILD)/docs.pdf: docs/docs.tex $(DOCSBUILD)
+$(DOCSBUILD)/docs.pdf: docs/docs.tex | $(DOCSBUILD)
 	@xelatex -output-directory=$(DOCSBUILD) -shell-escape docs/docs.tex
 	@xelatex -output-directory=$(DOCSBUILD) -shell-escape docs/docs.tex
 
-# Build library
 $(LIBRARY): $(LIB_OBJECTS) | $(BUILDDIR)
-	@mkdir -p $(BUILDDIR)
 	ar rcs $@ $(LIB_OBJECTS)
-	@echo "Library created: $@"
+	@echo "Static library created: $@"
+
+$(SHARED_LIBRARY): $(LIB_OBJECTS) | $(BUILDDIR)
+	$(CC) -shared -o $@ $(LIB_OBJECTS) $(LDFLAGS) $(LDLIBS)
+	@echo "Shared library created: $@"
 
 # Compile library objects
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
-	@mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -I$(INCDIR) -c $< -o $@
 	@echo "Compiled: $<"
 
 # Compile examples
 $(BINDIR)/%: $(EXDIR)/%.c $(LIBRARY) | $(BINDIR)
-	@mkdir -p $(BINDIR)
-	$(CC) $(CFLAGS) -I$(INCDIR) $< $(LIBRARY) $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) -I$(INCDIR) $< $(LIBRARY) $(LDFLAGS) $(LDLIBS) -o $@
 	@echo "Built example: $@"
 
 # Create directories
@@ -77,3 +78,6 @@ clean: cleandocs
 
 cleandocs:
 	rm -rf $(DOCSBUILD)
+
+# Include the generated dependency files
+-include $(LIB_OBJECTS:.o=.d)

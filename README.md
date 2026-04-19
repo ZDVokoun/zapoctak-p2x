@@ -19,8 +19,10 @@ K sestavení programu a dokumentace je potřeba:
   - `texlive`, `python`, `doxygen`
 
 Pro sestavení knihovny stačí zavolat `make`. Statickou knihovnu pak naleznete
-v `build/libzapoctak.a`. Dokumentace se pak kompiluje pomocí `make docs` a ta
-sestaví jednu celkovou dokumentaci programu v souboru `docs/build/docs.pdf` a pak API
-dokumentaci vygenerovanou pomocí `doxygen` v `docs/build/html/index.html`.
+v `build/libzapoctak.a`, dynamicky linkovanou pak v `build/libzapoctak.so`.
+Dokumentace se kompiluje pomocí `make docs` a ta sestaví jednu celkovou
+dokumentaci programu v souboru `docs/build/docs.pdf` a pak API dokumentaci
+vygenerovanou pomocí `doxygen` v `docs/build/html/index.html`. Pro smazání
+kompilovaných souborů použijte `make clean` a `make cleandocs`.
 
 Zbytek informací lze najít v podrobnější dokumentaci.

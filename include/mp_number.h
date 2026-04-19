@@ -1,10 +1,10 @@
 #ifndef ZAPOCTAK_MP_NUMBER_H
 #define ZAPOCTAK_MP_NUMBER_H
 
+#include "config.h"
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
-#include "config.h"
 
 /**
  * @brief Multi-precision number representation in Base 2^64
@@ -62,7 +62,8 @@ int b64_copy(struct Base2_64Int *dst, const struct Base2_64Int *src);
 int b64_expand(struct Base2_64Int *bn, size_t new_cap);
 
 /**
- * @brief Multiply `Base2_64Int` by a scalar (64-bit unsigned integer) and add an addend
+ * @brief Multiply `Base2_64Int` by a scalar (64-bit unsigned integer) and add
+ * an addend
  *
  * Performs: bn = bn * multiplier + addend
  *
@@ -86,7 +87,7 @@ int b64_mul(struct Base2_64Int *bn, uint64_t multiplier, uint64_t addend);
  * @retval -1 if divisor == 0
  */
 int base2_64_divmod(struct Base2_64Int *bn, uint64_t divisor,
-                     uint64_t *remainder);
+                    uint64_t *remainder);
 
 /**
  * @brief Fast division of 128-bit number by 64-bit divisor
