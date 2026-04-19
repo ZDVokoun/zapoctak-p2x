@@ -29,11 +29,18 @@ EXAMPLE_BINS := $(addprefix $(BINDIR)/,$(EXAMPLES))
 # Docs related
 DOCSBUILD := docs/build
 
-.PHONY: all examples clean cleandocs docs
+.PHONY: all examples clean cleandocs docs library sharedlibrary
 
 # Default target now builds both libraries
-all: $(LIBRARY) $(SHARED_LIBRARY)
+all: library sharedlibrary examples docs
 	@echo "Libraries built: $(LIBRARY) and $(SHARED_LIBRARY)"
+	@echo "Examples built: $(EXAMPLE_BINS)"
+	@echo "Main docs built: $(DOCSBUILD)/docs.pdf"
+	@echo "Doxygen docs built: $(DOCSBUILD)/html/index.html"
+
+library: $(LIBRARY)
+
+sharedlibrary: $(SHARED_LIBRARY)
 
 examples: $(EXAMPLE_BINS)
 	@echo "All examples built"

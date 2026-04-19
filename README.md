@@ -18,11 +18,13 @@ K sestavení programu a dokumentace je potřeba:
   - `gcc`, `make`
   - `texlive`, `python`, `doxygen`
 
-Pro sestavení knihovny stačí zavolat `make`. Statickou knihovnu pak naleznete
-v `build/libzapoctak.a`, dynamicky linkovanou pak v `build/libzapoctak.so`.
-Dokumentace se kompiluje pomocí `make docs` a ta sestaví jednu celkovou
-dokumentaci programu v souboru `docs/build/docs.pdf` a pak API dokumentaci
-vygenerovanou pomocí `doxygen` v `docs/build/html/index.html`. Pro smazání
-kompilovaných souborů použijte `make clean` a `make cleandocs`.
+Příkaz `make` nabízí následující příkazy:
+  - `make library` -- sestaví staticky linkovanou knihovnu do `build/libzapoctak.a`
+  - `make sharedlibrary` -- sestaví dynamicky linkovanou knihovnu do `build/libzapoctak.so`
+  - `make examples` -- sestaví příklady programů ve složce `examples` do `build/examples`
+  - `make docs` -- sestaví jednu celkovou dokumentaci programu v souboru `docs/build/docs.pdf` a pak API dokumentaci vygenerovanou pomocí `doxygen` v `docs/build/html/index.html`
+  - `make` a `make all` -- spustí všechny příkazy výše
+  - `make clean` -- smaže kompilované soubory spojené s programem
+  - `make cleandocs` -- smaže kompilované soubory spojené s dokumentací
 
 Zbytek informací lze najít v podrobnější dokumentaci.
