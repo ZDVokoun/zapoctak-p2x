@@ -1,20 +1,21 @@
 #ifndef ZAPOCTAK_RESIDUE_H
 #define ZAPOCTAK_RESIDUE_H
 
+#include "config.h"
 #include <stddef.h>
 #include <stdint.h>
-#include "config.h"
 
 /**
  * @brief Residue number system representation using Mersenne moduli
  */
 struct ResidueInt {
-  uint64_t *residues;
-  size_t len;
+  uint64_t *residues; /**< Array of residues for each modulus */
+  size_t len;         /**< Number of moduli (length of residues array) */
 };
 
 /**
- * @brief Initialize a `ResidueInt` with enough moduli to represent minimumSz bits
+ * @brief Initialize a `ResidueInt` with enough moduli to represent minimumSz
+ * bits
  *
  * @param res Output residue number to initialize
  * @param minimumSz Minimum number of bits to represent
@@ -86,7 +87,8 @@ int residue_mul(const struct ResidueInt *a, const struct ResidueInt *b);
  * @return 0 on success
  * @retval -1 on error
  */
-int residue_cmp(const struct ResidueInt *a, const struct ResidueInt *b, int *result);
+int residue_cmp(const struct ResidueInt *a, const struct ResidueInt *b,
+                int *result);
 
 /**
  * @brief Print `ResidueInt` representation (debug)

@@ -12,9 +12,9 @@
  * Limbs are stored in little-endian order.
  */
 struct Base2_64Int {
-  uint64_t *limbs;
-  size_t len;
-  size_t capacity;
+  uint64_t *limbs; /**< Array of 64-bit limbs (in little-endian order) */
+  size_t len;      /**< Number of limbs currently used */
+  size_t capacity; /**< Total allocated limbs (capacity) */
 };
 
 /**
