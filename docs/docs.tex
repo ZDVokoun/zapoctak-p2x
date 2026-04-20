@@ -54,17 +54,17 @@
 \section{Úvod}
 
 K zápočtovému programu jsem si vybral téma Reziduální aritmetika, jehož
-součástí je implementace provádění aritmetických operací s dlouhými čísly za
-pomocí poznatků o zbytcích po dělení. Každé číslo v určitém rozmezí umíme
-jednoznačně vyjádřit jako seznam zbytků po dělení několika nesoudělnými čísly a
-s tímto seznamem pak velmi efektivně sčítat, odčítat a násobit.
+součástí je implementace aritmetických operací s dlouhými čísly s využitím
+poznatků o zbytcích po dělení. Každé číslo totiž v určitém rozmezí umíme jednoznačně
+vyjádřit jako seznam zbytků po dělení několika nesoudělnými čísly a s tímto
+seznamem pak velmi efektivně sčítat, odčítat a násobit.
 
 Vytvořil jsem tedy knihovnu v jazyce C, která implementuje veškeré potřebné
 operace, jako je převod z desítkového zápisu na zápis se zbytky a naopak a pak
 operace sčítání, odčítání, násobení a porovnávání.
 
 Tato celá práce stojí na poznatcích uvedené v knize {\it The Art of Computer
-Programming, Volume 2, Seminumerical algorithms} a hlavně na kapitolách 4.3.1
+Programming, Volume 2, Seminumerical algorithms} hlavně z kapitol 4.3.1
 {\it Classical algorithms}, 4.3.2 {\it Modular arithmetic} a 4.4 {\it Radix
 conversion}.
 
@@ -79,7 +79,8 @@ pomocí GCC. Celkově na kompilaci jsou potřeba tyto závislosti:
   \item \verb|texlive|, \verb|python|, \verb|doxygen|
 \end{itemize}
 
-Následně příkaz \verb|make| nabízí následující příkazy:
+Příkaz \verb|make|, pomocí nějž se kompiluje knihovna a dokumentace, nabízí
+následující příkazy:
 
 \begin{itemize}
   \item \verb|make library| -- sestaví staticky linkovanou knihovnu do
@@ -87,10 +88,11 @@ Následně příkaz \verb|make| nabízí následující příkazy:
   \item \verb|make sharedlibrary| -- sestaví dynamicky linkovanou knihovnu do
     \verb|build/libzapoctak.so|
   \item \verb|make examples| -- sestaví příklady programů ve složce
-    \verb|examples| do \verb|build/examples|
+    \verb|examples| do \verb|build/bin/examples|
   \item \verb|make docs| -- sestaví jednu celkovou dokumentaci programu v
-    souboru \verb|docs/build/docs.pdf| a pak API dokumentaci vygenerovanou
-    pomocí \verb|doxygen| v \verb|docs/build/html/index.html|
+    souboru \verb|docs/build/docs.pdf| (tu, kterou teď čtete) a pak API
+    dokumentaci vygenerovanou pomocí \verb|doxygen| (tu naleznete v
+    \verb|docs/build/html/index.html|)
   \item \verb|make| a \verb|make all| -- spustí všechny příkazy výše
   \item \verb|make clean| -- smaže kompilované soubory spojené s programem
   \item \verb|make cleandocs| -- smaže kompilované soubory spojené s dokumentací
@@ -99,38 +101,38 @@ Následně příkaz \verb|make| nabízí následující příkazy:
 V knihovně nás pak zajímají hlavně následující hlavičky:
 
 \begin{itemize}
-  \item \verb|conversion.h| -- obsahuje funkce na převody mezi používanými reprezentacemi,
-  \item \verb|residue.h| -- implementuje reziduové reprezentace čísla a operace na ní,
+  \item \verb|conversion.h| -- obsahuje funkce na převody mezi používanými reprezentacemi
+  \item \verb|residue.h| -- implementuje reziduovou reprezentaci čísla a operace s ní
 \end{itemize}
 
 Osnova postupu, jak se s touto knihovnou zachází, když dostaneme na vstupu
-dlouhé číslo v desítkové soustavě, bude typicky následovná:
+dlouhá čísla v desítkové soustavě, bude typicky následovná:
 
 \begin{enumerate}
-  \item Vytvoříme strukturu pro ukládání čísla jako vektor zbytků. Do něj převedeme řetězec
-    zápisu v desítkové soustavě.
+  \item Vytvoříme strukturu pro ukládání čísla jako vektor zbytků. Do něj
+    převedeme číslo zapsané v desítkové soustavě.
   \item Provedeme požadované operace na číslo v reziduovém systému.
-  \item Převedeme číslo v reziduovém systému do do desítkového zápisu.
+  \item Převedeme číslo v reziduovém systému do desítkového zápisu.
   \item Vyčistíme po sobě.
 \end{enumerate}
 
-První krok lze dělat dvěma způsoby. Nejprve ale vždy začneme tím, že si
+První krok lze udělat dvěma způsoby. Nejprve ale vždy začneme tím, že si
 vytvoříme struktury \verb|ResidueInt|. Pak nejpřímočařejší postup je použít
 funkci \verb|decimal_string_to_residue()|. Tato funkce za nás udělá dva
 mezikroky, kdy převádí řetězec nejprve do multi-precision reprezentace a tu pak
-do reziduální reprezentace. Na to ale musí při každém zavolání si inicializovat
+do reziduální reprezentace. Na to ale musí si při každém zavolání inicializovat
 multi-precision číslo (strukturu \verb|Base2_64Int|, která se nachází v
-hlavičce \verb|mp_number.h|). Pro převádění velkého množství čísel se může
-vyplatit udělat tyto mezikroky manuálně, jak je ukázáno v příkladu níže.
+hlavičce \verb|mp_number.h|). Proto pro převádění velkého množství čísel se
+může vyplatit udělat tyto mezikroky manuálně, jak je ukázáno v příkladu níže.
 
 Při převodu do reziduové reprezentace nebo při inicializaci reziduové
 reprezentace musíme vždy nastavit minimální velikost, kterou musí být reziduová
 reprezentace schopna reprezentovat, a to v bitech a u všech čísel, které spolu
 budou nějak interagovat, na stejnou hodnotu. Při nastavení správné velikosti se
-zamezí přetečení a zároveň kompatibilita jednotlivých reprezentací
-(implemetované operace totiž nepodporují operace nad reprezentacemi s různým
-počtem zbytků). Mějte ale na paměti, že v této implemetaci je možno vyjádřit
-jen čísla o méně než 653 bitech.
+zamezí přetečení a nekompatibilitě jednotlivých reprezentací (implemetované
+operace totiž nepodporují operace nad reprezentacemi s různým počtem zbytků).
+Mějte ale na paměti, že v této implemetaci je možno vyjádřit jen čísla o méně
+než 653 bitech.
 
 Co se týče operací, které můžeme dělat na čísle v reziduovém systému, jsou
 implementovány funkce na kopírování, sčítání, odčítání, násobení a porovnávání,
@@ -157,8 +159,8 @@ Níže lze vidět příklad užití na výpočet druhé mocniny velkého čísla
 
 \section{Teorie a implementace}
 
-Celý tento program stojí na poznatku z teorie čísel, které se nazývá Čínská
-zbytková věta. Níže je její znění:
+Celý tento program stojí na známé jako Čínská zbytková věta. Níže je její
+znění:
 
 \begin{theorem}[Čínská zbytková věta]
 Nechť $m_1, m_2, \dots, m_k$ jsou po dvou nesoudělná přirozená čísla, tj.
@@ -176,9 +178,9 @@ $$
 \end{theorem}
 
 Z této věty pak plyne to, že čísla od 0 po $M-1$ umíme vyjádřit jako vektor
-zbytků po dělení $(a_1, a_2, \dots, a_k)$. Zároveň můžeme vypozorovat, že pokud
+zbytků po dělení čísly $m_1,m_2, \dots, m_k$. Zároveň můžeme vypozorovat, že pokud
 chceme sčítat, odčítat a násobit, stačí nám v tomto vyjádření provádět danou
-operaci po složkách. Když totiž pro dělitel $m_i$ máme pro čísla $x$ a $y$
+operaci po složkách. Když totiž máme pro čísla $x$ a $y$ a dělitel $m_i$ 
 zbytky $a_i$ a $b_i$, platí kongruence:
 
 $$ x \equiv a_i \pmod{m_i} $$ $$ y \equiv b_i \pmod{m_i} $$
@@ -189,10 +191,10 @@ nebo odečíst):
 $$ x + y \equiv a_i + b_i \pmod{m_i} $$
 
 Vidíme tedy, že provádět operace s tímto tvarem jde snadno a efektivně. Třeba
-ale dělení by vyžadovala pro každý zbytek zjistit modulární inverz, což je ale
+ale dělení by vyžadovalo pro každý zbytek zjistit modulární inverz, což ale je
 drahá operace. Proto operace dělení není implementována.
 
-Pro zvýšenou efektivitu nebudu ale užívat jakákoli modula, nýbrž modula ve
+Pro zvýšenou efektivitu nebudu ale užívat ledajaká modula, nýbrž modula ve
 tvaru $m_i = 2^{\ell} - 1$. Tehdy můžeme při výpočtech využít jednodušších
 operací k efektivnějšímu výpočtu, protože za předpokladu, že $0 \leq a_i,b_i <
 m_i = 2^{\ell} - 1$ platí
@@ -211,10 +213,10 @@ $$
 
 kde pravé výrazy těchto kongruencí jsou vždy v intervalu $[0, m_i]$ a výrazy v
 hranatých závorkách se vyhodnotí na jedničku, pokud platí, jinak na nulu. Stačí
-tedy pak jen kontrolovat, zda výsledek je roven $m_i$ a dostaneme zbytek po
+tedy pak jen zkontrolovat, zda výsledek je roven $m_i$ a dostaneme zbytek po
 dělení bez použití operátoru \verb|%|.
 
-Pro výběr těchto modulů jsou využil následujícího vztahu:
+Pro výběr těchto modulů jsem využil následujícího vztahu:
 
 \begin{claim}
   \label{claim:1}
@@ -228,7 +230,7 @@ $$
 \end{claim}
 \begin{proof}
   Nejprve dokážeme implikaci $\Leftarrow$ prvního vztahu. Z definice $e \equiv
-  f \pmod{g}$ víme, že existuje $k \in \mathbb{Z}$ takový, že $e = k g + f$.
+  f \pmod{g}$ víme, že existuje $k \in \mathbb{Z}$ takové, že $e = k g + f$.
   Pak platí, že
 
   $$
@@ -256,30 +258,41 @@ Modula jsem tedy vybral tak, že jsem našel nesoudělná kladná celá čísla,
 mají co největší součet a jsou menší než 64 (aby nedocházelo k přetečení), a
 následně využil tvrzení \ref{claim:1}.
 
-\subsection{Binární zápis dlouhého čísla}
+\subsection{Binární reprezentace multi-precision čísla}
 
-Teď je potřeba zjistit, jak do tohoto tvaru dlouhá čísla převádět a taky jak je
-převádět zpět. Na to ale potřebujeme nějakou binární reprezentaci dlouhých
-čísel, do které můžeme převádět čísla zapsané v desítkové soustavě a naopak ze
-kterého můžeme převádět do desítkové soustavy. Ty budu reprezentovat v číselné
-soustavě o základu $2^{64}$, což můžeme implementovat jako vektor 64-bitových
-bezznaménkových čísel.
+Teď je potřeba zjistit, jak do reziduální reprezentace převádět a taky jak z ní
+převádět zpět. Na to ale potřebujeme nějakou binární reprezentaci multi-precision
+čísel, do které můžeme převádět čísla zapsaná v desítkové soustavě a naopak ze
+které můžeme převádět do desítkové soustavy. To dělám tak, že si číslo vyjádřím
+v číselné soustavě o základu $2^{64}$. To umíme implementovat jako vektor
+64-bitových bezznaménkových čísel.
 
-Teď na převody z desítkové soustavy a zpět a na převody na zbytkový tvar a zpět
-budeme potřebovat, aby toto dlouhé číslo podporovalo přičtení 64-bitového čísla
-a vynásobení a vydělení se zbytkem 64-bitovým číslem. Oboje je implementováno
-stejně, jako bychom sčítali, násobili či dělili známými školními algoritmy, jen
-čísla nemáme v desítkové soustavě, ale v soustavě o základu $2^{64}$. Pro
-sčítání tedy přičteme dané číslo k nejméně významné pozici, carry přičteme k
-vyšší pozici atd. Podobně u násobení vynásobíme \uv{číslici} na nejnižší
-pozici, carry přičteme k součinu na vyšší pozici atd.
+Teď na veškeré převody, co budu provádět, budeme potřebovat, aby toto dlouhé
+číslo podporovalo přičtení 64-bitového čísla a vynásobení a vydělení se zbytkem
+64-bitovým číslem. Oboje je implementováno stejně, jako bychom sčítali,
+násobili či dělili známými školními algoritmy, jen čísla nemáme v desítkové
+soustavě, ale v soustavě o základu $2^{64}$. Pro sčítání tedy přičteme dané
+číslo k \uv{cifře} na nejméně významné pozici, carry přičteme k vyšší pozici
+atd. Podobně u násobení vynásobíme \uv{číslici} na nejnižší pozici, carry
+přičteme k součinu na vyšší pozici atd. Dělení je analogické, jen začínáme od
+nejvyšší pozice a místo carry předáváme zbytek po dělení.
+
+Převod z desítkové soustavy na binární je implementováno tak, že rozdělíme
+zápis na chunky po 19 cifrách (od nejméně významné pozice), ty samostatně
+převedu na číslo \verb|uint64_t| pomocí funkce \verb|strtoull()| a následně pro
+chunky od nejvýznamnější pozice přičtu chunk k multi-precision číslu a
+multi-precision číslo vynásobím $10^{19}$ (tato mocnina byla zvolena z toho
+důvodu, že se jedná o nejvyšší mocninu deseti, která se vejde do 64-bitového
+čísla). Převod z binární na desítkovou soustavu se udělá obdobně, jen se místo
+násobení dělí číslem $10^{19}$ a postupně si ukládáme zbytky po dělení, které
+následně převedeme na string.
 
 \subsection{Převod na zbytkový tvar}
 
-Pro efektivní převod na zbytkový tvar využijeme toho, že binární číslo dokážeme
+Pro efektivní převod na zbytkový tvar využijeme toho, že číslo v binárním zápisu dokážeme
 jednoduše vyjádřit v číselné soustavě se základem $2^{\ell}$ tak, že postupně
-získáme prvních $j$ nejméně významných bitů vstupního čísla $x$, pak dalších
-$j$ bitů atd. Zbytek po modulu $m_i = 2^{\ell} - 1$ vyjádříme následovně --
+získáme prvních $\ell$ nejméně významných bitů vstupního čísla $x$, pak dalších
+$\ell$ bitů atd. Zbytek po modulu $m_i = 2^{\ell} - 1$ pak vyjádříme následovně --
 získáme čísla $0 \leq \alpha_0, \alpha_1, \dots, \alpha_m < 2^{\ell}$ taková,
 aby platilo
 
@@ -319,7 +332,8 @@ urychlí:
     \equiv 2^{ce} - 1 \pmod{2^f - 1}
   $$
 
-  Po dosazení $ce \bmod f = 1$ dostaneme
+  Podle tvrzení \ref{claim:1} a $ce \bmod f = 1$ platí, že $2^{ce} \equiv 2^1
+  \pmod{2^f - 1}$. Po dosazení tedy dostaneme
 
   $$
   \left((1 + 2^d + \cdots + 2^{(c-1)d}) \cdot (2^e - 1)\right) 
@@ -353,12 +367,13 @@ $$v_{3} = ((a_{3}-v_{1})c_{13}-v_{2})c_{23}\bmod m_{3},$$
 $$\vdots$$
 $$v_{k} = (\dots((a_{k}-v_{1})c_{1k}-v_{2})c_{2k}-\dots-v_{k-1})c_{(k-1)k}\bmod m_{k}.$$  
 
-Protože pro každé $1 \leq i \leq k$ platí $0 \leq v_i \leq m_i$, výsledné $x$
-není nikdy větší než $M$. Dále platí, že každý vektor zbytků taky dá jedinečné
-číslo $x$, protože platí $x \equiv a_i \pmod{m_i}$. A protože hodnoty $v_1,
-v_2, \dots, v_k$ mohou dohromady dosahovat až $m_1 \cdots m_2 \cdots m_k = M$
-různých hodnot, pro každé $x$ existuje vektor zbytků, které po této proceduře
-vrátí toto číslo $x$ zpět.
+Protože pro každé $1 \leq i \leq k$ platí $0 \leq v_i < m_i$, výsledné $x$ není
+nikdy větší než $M$. Dále platí, že každý vektor zbytků taky dá jedinečné číslo
+$x$, protože pro každé $1 \leq i \leq k$ je $0 \leq a_i < m_i$, tedy hodnoty
+$v_i$ jsou jednoznačně určeny a stejně pak i číslo $x$. A protože hodnoty $v_1,
+v_2, \dots, v_k$ mohou dohromady dosahovat až $m_1 m_2 \cdots m_k = M$ různých
+hodnot, pro každé $x$ existuje vektor zbytků, které po této proceduře vrátí
+toto číslo $x$ zpět.
 
 Tímto způsobem jsme reprezentovali číslo $x$ ve smíšené soustavě (mixed-radix),
 ze které lze číslo převést do binární soustavy tak, že vyhodnotíme reprezentaci
@@ -368,8 +383,9 @@ $$
 (\cdots ((v_k m_{k-1} + v_{k-1}) m_{k-2}) + \cdots + v_1) m_0 + v_0 = x
 $$
 
-Pokud by nám stačilo jen dvojici čísel v reprezentaci pomocí vektoru zbytků,
-nepotřebujeme tento výraz vyhodnocovat. Stačí akorát porovnat reprezentace ve
-smíšených soustavách lexikograficky.
+Pokud by nám stačilo jen určitou dvojici čísel v reprezentaci pomocí vektoru
+zbytků porovnat, nepotřebujeme tento výraz vyhodnocovat. Stačí akorát porovnat
+reprezentace ve smíšených soustavách lexikograficky. To je přesně způsob, jak je
+implementováno porovnávání v této knihovně.
 
 \end{document}
