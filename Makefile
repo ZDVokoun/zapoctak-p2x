@@ -49,12 +49,12 @@ docs: $(DOCSBUILD)/docs.pdf $(DOCSBUILD)/.doxygen_done
 	@echo "Docs generated"
 
 $(DOCSBUILD)/.doxygen_done: $(LIB_HEADERS) | $(DOCSBUILD)
-	@doxygen
-	@touch $@
+	doxygen
+	touch $@
 
 $(DOCSBUILD)/docs.pdf: docs/docs.tex | $(DOCSBUILD)
-	@xelatex -output-directory=$(DOCSBUILD) -shell-escape docs/docs.tex
-	@xelatex -output-directory=$(DOCSBUILD) -shell-escape docs/docs.tex
+	xelatex -output-directory=$(DOCSBUILD) -shell-escape docs/docs.tex
+	xelatex -output-directory=$(DOCSBUILD) -shell-escape docs/docs.tex
 
 $(LIBRARY): $(LIB_OBJECTS) | $(BUILDDIR)
 	ar rcs $@ $(LIB_OBJECTS)
@@ -76,7 +76,7 @@ $(BINDIR)/%: $(EXDIR)/%.c $(LIBRARY) | $(BINDIR)
 
 # Create directories
 $(BUILDDIR) $(OBJDIR) $(BINDIR) $(DOCSBUILD):
-	@mkdir -p $@
+	mkdir -p $@
 
 # Clean build artifacts
 clean: cleandocs
