@@ -19,10 +19,10 @@ struct ResidueInt {
  *
  * @param res Output residue number to initialize
  * @param minimumSz Minimum number of bits to represent
- * @return 0 on success
- * @retval -1 if memory allocation fails or moduli capacity is insufficient
+ * @pre res != NULL
+ * @note Asserts if moduli capacity is insufficient or memory allocation fails.
  */
-int init_residue(struct ResidueInt *res, size_t minimumSz);
+void init_residue(struct ResidueInt *res, size_t minimumSz);
 
 /**
  * @brief Free resources allocated for a `ResidueInt`
@@ -36,59 +36,50 @@ void residue_free(struct ResidueInt *res);
  *
  * @param dst Destination residue number
  * @param src Source residue number
- * @return 0 on success
- * @retval -1 if memory allocation fails
+ * @pre dst != NULL && src != NULL
+ * @note Asserts on memory allocation failure.
  */
-int residue_copy(struct ResidueInt *dst, const struct ResidueInt *src);
+void residue_copy(struct ResidueInt *dst, const struct ResidueInt *src);
 
 /**
  * @brief Add two residue numbers: a = a + b (in-place)
  *
  * @param a Left operand and output (in-place)
  * @param b Right operand
- * @return 0 on success
- * @retval -1 if lengths don't match or pointers are NULL
- * @pre a->len == b->len
+ * @pre a != NULL && b != NULL && a->len == b->len
  */
-int residue_add(const struct ResidueInt *a, const struct ResidueInt *b);
+void residue_add(const struct ResidueInt *a, const struct ResidueInt *b);
 
 /**
  * @brief Subtract two residue numbers: a = a - b (in-place)
  *
  * @param a Left operand and output (in-place)
  * @param b Right operand
- * @return 0 on success
- * @retval -1 if lengths don't match or pointers are NULL
- * @pre a->len == b->len
+ * @pre a != NULL && b != NULL && a->len == b->len
  */
-int residue_sub(const struct ResidueInt *a, const struct ResidueInt *b);
+void residue_sub(const struct ResidueInt *a, const struct ResidueInt *b);
 
 /**
  * @brief Multiply two residue numbers: a = a * b (in-place)
  *
  * @param a Left operand and output (in-place)
  * @param b Right operand
- * @return 0 on success
- * @retval -1 if lengths don't match or pointers are NULL
- * @pre a->len == b->len
+ * @pre a != NULL && b != NULL && a->len == b->len
  */
-int residue_mul(const struct ResidueInt *a, const struct ResidueInt *b);
+void residue_mul(const struct ResidueInt *a, const struct ResidueInt *b);
 
 /**
  * @brief Compare two residue representations
  *
  * The comparison is done by converting both residues to mixed radix
- * representation and comparing the resulting values. The function sets
- * *result to -1 if a < b, 0 if a == b, and 1 if a > b.
+ * representation and comparing the resulting values.
  *
  * @param a Left operand
  * @param b Right operand
- * @param result Output comparison result (-1, 0, 1)
- * @return 0 on success
- * @retval -1 on error
+ * @return -1 if a < b, 0 if a == b, and 1 if a > b.
+ * @pre a->len == b->len
  */
-int residue_cmp(const struct ResidueInt *a, const struct ResidueInt *b,
-                int *result);
+int residue_cmp(const struct ResidueInt *a, const struct ResidueInt *b);
 
 /**
  * @brief Print `ResidueInt` representation (debug)

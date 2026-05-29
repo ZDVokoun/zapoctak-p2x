@@ -2,14 +2,12 @@
 #include "config.h"
 #include "conversion.h"
 #include "mp_number.h"
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-int init_residue(struct ResidueInt *res, size_t minimumSz) {
-  if (res == NULL) {
-    fprintf(stderr, "Error: NULL pointer passed to init_residue\n");
-    return -1;
-  }
+void init_residue(struct ResidueInt *res, size_t minimumSz) {
+  assert(res != NULL);
 
   size_t moduliSum = 0;
   size_t moduliCount = 0;
@@ -20,21 +18,11 @@ int init_residue(struct ResidueInt *res, size_t minimumSz) {
       break;
     }
   }
-  if (moduliSum < minimumSz) {
-    fprintf(stderr,
-            "Error: Insufficient moduli capacity for required size %zu bits\n",
-            minimumSz);
-    return -1;
-  }
+  assert(moduliSum >= minimumSz);
 
   res->residues = calloc(moduliCount, sizeof(uint64_t));
-  if (res->residues == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed in init_residue\n");
-    return -1;
-  }
+  assert(res->residues != NULL || moduliCount == 0);
   res->len = moduliCount;
-
-  return 0;
 }
 
 void residue_free(struct ResidueInt *res) {
@@ -46,39 +34,23 @@ void residue_free(struct ResidueInt *res) {
   res->len = 0;
 }
 
-int residue_copy(struct ResidueInt *dst, const struct ResidueInt *src) {
-  if (dst == NULL || src == NULL) {
-    fprintf(stderr, "Error: NULL pointer passed to residue_copy\n");
-    return -1;
-  }
+void residue_copy(struct ResidueInt *dst, const struct ResidueInt *src) {
+  assert(dst != NULL);
+  assert(src != NULL);
 
   dst->len = src->len;
   dst->residues = malloc(dst->len * sizeof(uint64_t));
-  if (dst->residues == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed in residue_copy\n");
-    dst->len = 0;
-    return -1;
-  }
+  assert(dst->residues != NULL || dst->len == 0);
 
   for (size_t i = 0; i < src->len; i++) {
     dst->residues[i] = src->residues[i];
   }
-
-  return 0;
 }
 
-int residue_add(const struct ResidueInt *a, const struct ResidueInt *b) {
-  if (a == NULL || b == NULL) {
-    fprintf(stderr, "Error: NULL pointer passed to residue_add\n");
-    return -1;
-  }
-
-  if (a->len != b->len) {
-    fprintf(stderr,
-            "Error: Length mismatch in residue_add (a->len=%zu, b->len=%zu)\n",
-            a->len, b->len);
-    return -1;
-  }
+void residue_add(const struct ResidueInt *a, const struct ResidueInt *b) {
+  assert(a != NULL);
+  assert(b != NULL);
+  assert(a->len == b->len);
 
   for (size_t i = 0; i < a->len; i++) {
     uint64_t modulus = (1ULL << moduli64[i]) - 1;
@@ -88,22 +60,12 @@ int residue_add(const struct ResidueInt *a, const struct ResidueInt *b) {
     if (a->residues[i] == modulus)
       a->residues[i] = 0;
   }
-
-  return 0;
 }
 
-int residue_sub(const struct ResidueInt *a, const struct ResidueInt *b) {
-  if (a == NULL || b == NULL) {
-    fprintf(stderr, "Error: NULL pointer passed to residue_sub\n");
-    return -1;
-  }
-
-  if (a->len != b->len) {
-    fprintf(stderr,
-            "Error: Length mismatch in residue_sub (a->len=%zu, b->len=%zu)\n",
-            a->len, b->len);
-    return -1;
-  }
+void residue_sub(const struct ResidueInt *a, const struct ResidueInt *b) {
+  assert(a != NULL);
+  assert(b != NULL);
+  assert(a->len == b->len);
 
   for (size_t i = 0; i < a->len; i++) {
     uint64_t modulus = (1ULL << moduli64[i]) - 1;
@@ -113,22 +75,12 @@ int residue_sub(const struct ResidueInt *a, const struct ResidueInt *b) {
     if (a->residues[i] == modulus)
       a->residues[i] = 0;
   }
-
-  return 0;
 }
 
-int residue_mul(const struct ResidueInt *a, const struct ResidueInt *b) {
-  if (a == NULL || b == NULL) {
-    fprintf(stderr, "Error: NULL pointer passed to residue_mul\n");
-    return -1;
-  }
-
-  if (a->len != b->len) {
-    fprintf(stderr,
-            "Error: Length mismatch in residue_mul (a->len=%zu, b->len=%zu)\n",
-            a->len, b->len);
-    return -1;
-  }
+void residue_mul(const struct ResidueInt *a, const struct ResidueInt *b) {
+  assert(a != NULL);
+  assert(b != NULL);
+  assert(a->len == b->len);
 
   for (size_t i = 0; i < a->len; i++) {
     uint64_t modulus = (1ULL << moduli64[i]) - 1;
@@ -138,23 +90,12 @@ int residue_mul(const struct ResidueInt *a, const struct ResidueInt *b) {
     if (a->residues[i] == modulus)
       a->residues[i] = 0;
   }
-
-  return 0;
 }
 
-int residue_cmp(const struct ResidueInt *a, const struct ResidueInt *b,
-                int *result) {
-  if (a == NULL || b == NULL || result == NULL) {
-    fprintf(stderr, "Error: NULL pointer passed to residue_cmp\n");
-    return -1;
-  }
-
-  if (a->len != b->len) {
-    fprintf(stderr,
-            "Error: Length mismatch in residue_cmp (a->len=%zu, b->len=%zu)\n",
-            a->len, b->len);
-    return -1;
-  }
+int residue_cmp(const struct ResidueInt *a, const struct ResidueInt *b) {
+  assert(a != NULL);
+  assert(b != NULL);
+  assert(a->len == b->len);
 
   // Convert residue representation to mixed radix system
   // in which the numbers can be compared lexicographically
@@ -162,24 +103,17 @@ int residue_cmp(const struct ResidueInt *a, const struct ResidueInt *b,
   uint64_t v_a[a->len];
   uint64_t v_b[b->len];
 
-  if (residue_to_mixed_radix(a, v_a) != 0) {
-    return -1;
-  }
-  if (residue_to_mixed_radix(b, v_b) != 0) {
-    return -1;
-  }
+  residue_to_mixed_radix(a, v_a);
+  residue_to_mixed_radix(b, v_b);
 
   for (size_t i = a->len; i-- > 0;) {
     if (v_a[i] < v_b[i]) {
-      *result = -1;
-      return 0;
+      return -1;
     } else if (v_a[i] > v_b[i]) {
-      *result = 1;
-      return 0;
+      return 1;
     }
   }
 
-  *result = 0;
   return 0;
 }
 

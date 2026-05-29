@@ -2,6 +2,7 @@
 #include "config.h"
 #include "mp_number.h"
 #include "residue.h"
+#include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,13 +11,9 @@
 #define POW_TEN 19
 #define TEN_POW_19 10000000000000000000ULL
 
-int decimal_string_to_base2_64(const char *str, struct Base2_64Int *result) {
-
-  if (str == NULL || result == NULL) {
-    fprintf(stderr,
-            "Error: NULL pointer passed to decimal_string_to_base2_64\n");
-    return -1;
-  }
+void decimal_string_to_base2_64(const char *str, struct Base2_64Int *result) {
+  assert(str != NULL);
+  assert(result != NULL);
 
   size_t len = strlen(str);
   const char *p = str;
@@ -24,9 +21,7 @@ int decimal_string_to_base2_64(const char *str, struct Base2_64Int *result) {
   // log2(10) is smaller than 10/3 because log2(10) = 3.322
   // We have to ceil the division result
   size_t initSz = (len * 10 + 2) / 3 / 64 + 1;
-  if (b64_init(result, initSz) != 0) {
-    return -1;
-  }
+  b64_init(result, initSz);
 
   // Skip leading whitespace/zeros if necessary
   while (*p == '0' || isspace(*p)) {
@@ -34,7 +29,7 @@ int decimal_string_to_base2_64(const char *str, struct Base2_64Int *result) {
     len--;
   }
   if (len == 0)
-    return 0;
+    return;
 
   // First chunk size is a remainder of chunk size
   int first_chunk_len = len % POW_TEN;
@@ -62,33 +57,21 @@ int decimal_string_to_base2_64(const char *str, struct Base2_64Int *result) {
     buffer[POW_TEN] = '\0';
     uint64_t chunk_val = strtoull(buffer, NULL, 10);
 
-    if (b64_mul(result, TEN_POW_19, chunk_val) != 0) {
-      fprintf(stderr,
-              "Error: Multiplication failed in decimal_string_to_base2_64\n");
-      b64_free(result);
-      return -1;
-    }
+    b64_mul(result, TEN_POW_19, chunk_val);
 
     p += POW_TEN;
   }
-
-  return 0;
 }
 
-int base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
+void base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
                         struct ResidueInt *res) {
-
-  if (bn == NULL || res == NULL) {
-    fprintf(stderr, "Error: NULL pointer passed to base2_64_to_residue\n");
-    return -1;
-  }
+  assert(bn != NULL);
+  assert(res != NULL);
 
   if (bn->len * 64 + 1 > minimumSz)
     minimumSz = bn->len * 64 + 1;
 
-  if (init_residue(res, minimumSz) != 0) {
-    return -1;
-  }
+  init_residue(res, minimumSz);
 
   for (size_t i = 0; i < res->len; i++) {
     uint64_t modulusPow = moduli64[i];
@@ -129,39 +112,22 @@ int base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
 
     res->residues[i] = residue;
   }
-
-  return 0;
 }
 
-int decimal_string_to_residue(const char *str, size_t minimumSz,
+void decimal_string_to_residue(const char *str, size_t minimumSz,
                               struct ResidueInt *res) {
-
-  if (str == NULL || res == NULL) {
-    fprintf(stderr,
-            "Error: NULL pointer passed to decimal_string_to_residue\n");
-    return -1;
-  }
+  assert(str != NULL);
+  assert(res != NULL);
 
   struct Base2_64Int bn;
-  if (decimal_string_to_base2_64(str, &bn) != 0) {
-    return -1;
-  }
-
-  if (base2_64_to_residue(&bn, minimumSz, res) != 0) {
-    b64_free(&bn);
-    return -1;
-  }
-
+  decimal_string_to_base2_64(str, &bn);
+  base2_64_to_residue(&bn, minimumSz, res);
   b64_free(&bn);
-  return 0;
 }
 
-int residue_to_mixed_radix(const struct ResidueInt *res, uint64_t *v) {
-
-  if (res == NULL || v == NULL) {
-    fprintf(stderr, "Error: NULL pointer passed to residue_to_mixed_radix\n");
-    return -1;
-  }
+void residue_to_mixed_radix(const struct ResidueInt *res, uint64_t *v) {
+  assert(res != NULL);
+  assert(v != NULL);
 
   for (size_t i = 0; i < res->len; i++) {
     v[i] = res->residues[i];
@@ -191,49 +157,32 @@ int residue_to_mixed_radix(const struct ResidueInt *res, uint64_t *v) {
       v[j] = ((uint128_t)v[j] * (uint128_t)c) % modulus;
     }
   }
-  return 0;
 }
 
-int residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn) {
-
-  if (res == NULL || bn == NULL) {
-    fprintf(stderr, "Error: NULL pointer passed to residue_to_base2_64\n");
-    return -1;
-  }
+void residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn) {
+  assert(res != NULL);
+  assert(bn != NULL);
 
   uint64_t v[res->len];
-  if (residue_to_mixed_radix(res, v) != 0) {
-    return -1;
-  }
+  residue_to_mixed_radix(res, v);
 
   // Conversion to Base 2^64 representation
-  if (b64_init(bn, 1) != 0) {
-    return -1;
-  }
+  b64_init(bn, 1);
 
   // Evaluate the number in mixed radix system with Horner's scheme
   for (size_t i = res->len; i-- > 0;) {
     uint64_t modulus = (1ULL << moduli64[i]) - 1;
-    if (b64_mul(bn, modulus, 0) != 0 || b64_mul(bn, 1, v[i]) != 0) {
-      fprintf(stderr, "Error: Multiplication failed in residue_to_base2_64\n");
-      b64_free(bn);
-      return -1;
-    }
+    b64_mul(bn, modulus, 0);
+    b64_mul(bn, 1, v[i]);
   }
-
-  return 0;
 }
 
-int base2_64_decimal_string(const struct Base2_64Int *bn, char *str) {
-  if (bn == NULL || str == NULL) {
-    fprintf(stderr, "Error: NULL pointer passed to base2_64_decimal_string\n");
-    return -1;
-  }
+void base2_64_decimal_string(const struct Base2_64Int *bn, char *str) {
+  assert(bn != NULL);
+  assert(str != NULL);
 
   struct Base2_64Int temp;
-  if (b64_init(&temp, bn->capacity) != 0) {
-    return -1;
-  }
+  b64_init(&temp, bn->capacity);
 
   memcpy(temp.limbs, bn->limbs, bn->len * sizeof(uint64_t));
   temp.len = bn->len;
@@ -246,11 +195,7 @@ int base2_64_decimal_string(const struct Base2_64Int *bn, char *str) {
   uint64_t current_rem = 0;
   while (temp.len > 0) {
     uint64_t rem;
-    if (base2_64_divmod(&temp, TEN_POW_19, &rem) != 0) {
-      fprintf(stderr, "Error: Division failed in base2_64_decimal_string\n");
-      b64_free(&temp);
-      return -1;
-    }
+    base2_64_divmod(&temp, TEN_POW_19, &rem);
     current_rem += rem;
 
     // Convert remainder to decimal string
@@ -274,26 +219,14 @@ int base2_64_decimal_string(const struct Base2_64Int *bn, char *str) {
   }
   strcpy(str, buffer);
   b64_free(&temp);
-
-  return 0;
 }
 
-int residue_to_decimal_string(const struct ResidueInt *res, char *str) {
-  if (res == NULL || str == NULL) {
-    fprintf(stderr, "Error: NULL pointer passed to residue_decimal_string\n");
-    return -1;
-  }
+void residue_to_decimal_string(const struct ResidueInt *res, char *str) {
+  assert(res != NULL);
+  assert(str != NULL);
 
   struct Base2_64Int bn;
-  if (residue_to_base2_64(res, &bn) != 0) {
-    return -1;
-  }
-
-  if (base2_64_decimal_string(&bn, str) != 0) {
-    b64_free(&bn);
-    return -1;
-  }
-
+  residue_to_base2_64(res, &bn);
+  base2_64_decimal_string(&bn, str);
   b64_free(&bn);
-  return 0;
 }

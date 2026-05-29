@@ -33,6 +33,7 @@ int main() {
     uint64_t rem;
     base2_64_divmod(&temp_bn, modulus, &rem);
     printf("Residue %zu: %lu\n", i, rem);
+    b64_free(&temp_bn);
   }
 
   printf("\n=== Conversion Back to Decimal Representation ===\n\n");

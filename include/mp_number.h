@@ -22,10 +22,10 @@ struct Base2_64Int {
  *
  * @param bn Output number to initialize
  * @param initial_cap Initial capacity in limbs
- * @return 0 on success
- * @retval -1 if memory allocation fails
+ * @pre bn != NULL
+ * @note Asserts on memory allocation failure.
  */
-int b64_init(struct Base2_64Int *bn, size_t initial_cap);
+void b64_init(struct Base2_64Int *bn, size_t initial_cap);
 
 /**
  * @brief Free resources allocated for a `Base2_64Int` number
@@ -53,20 +53,20 @@ void print_base2_64(const struct Base2_64Int *bn);
  *
  * @param dst Destination number
  * @param src Source number
- * @return 0 on success
- * @retval -1 if memory allocation fails
+ * @pre dst != NULL && src != NULL
+ * @note Asserts on memory allocation failure.
  */
-int b64_copy(struct Base2_64Int *dst, const struct Base2_64Int *src);
+void b64_copy(struct Base2_64Int *dst, const struct Base2_64Int *src);
 
 /**
  * @brief Expand the capacity of a `Base2_64Int` number
  *
  * @param bn Number to expand
  * @param new_cap New capacity in limbs
- * @return 0 on success
- * @retval -1 if memory allocation fails
+ * @pre bn != NULL
+ * @note Asserts on memory allocation failure.
  */
-int b64_expand(struct Base2_64Int *bn, size_t new_cap);
+void b64_expand(struct Base2_64Int *bn, size_t new_cap);
 
 /**
  * @brief Multiply `Base2_64Int` by a scalar (64-bit unsigned integer) and add
@@ -77,10 +77,10 @@ int b64_expand(struct Base2_64Int *bn, size_t new_cap);
  * @param bn Number to update
  * @param multiplier Scalar multiplier
  * @param addend Scalar addend
- * @return 0 on success
- * @retval -1 if memory allocation fails or if negative numbers are used
+ * @pre bn != NULL
+ * @note Asserts on memory allocation failure during expansion.
  */
-int b64_mul(struct Base2_64Int *bn, uint64_t multiplier, uint64_t addend);
+void b64_mul(struct Base2_64Int *bn, uint64_t multiplier, uint64_t addend);
 
 /**
  * @brief Division with modulo for `Base2_64Int` by a 64-bit divisor
@@ -90,10 +90,9 @@ int b64_mul(struct Base2_64Int *bn, uint64_t multiplier, uint64_t addend);
  * @param bn Number to divide (updated in-place)
  * @param divisor 64-bit divisor
  * @param remainder Output remainder
- * @return 0 on success
- * @retval -1 if divisor == 0
+ * @pre bn != NULL && divisor != 0
  */
-int base2_64_divmod(struct Base2_64Int *bn, uint64_t divisor,
+void base2_64_divmod(struct Base2_64Int *bn, uint64_t divisor,
                     uint64_t *remainder);
 
 /**

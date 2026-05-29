@@ -13,9 +13,9 @@
   * 
   * @param str Input decimal string
   * @param result Output Base 2^64 integer
-  * @return 0 on success, -1 on error
+  * @pre str != NULL && result != NULL
   */
-int decimal_string_to_base2_64(const char *str, struct Base2_64Int *result);
+void decimal_string_to_base2_64(const char *str, struct Base2_64Int *result);
 
 /**
  * @brief Converts a Base 2^64 integer to its residue representation
@@ -28,10 +28,9 @@ int decimal_string_to_base2_64(const char *str, struct Base2_64Int *result);
  * @param bn Input Base 2^64 integer
  * @param minimumSz Minimum size for the residue representation
  * @param res Output residue representation
- * @return 0 on success
- * @retval -1 if bn or res is NULL, or if initialization fails
+ * @pre bn != NULL && res != NULL
  */
-int base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
+void base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
                          struct ResidueInt *res);
 
 /**
@@ -43,11 +42,10 @@ int base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
  * @param str Input decimal string
  * @param minimumSz Minimum size for the residue representation
  * @param res Output residue representation
- * @return 0 on success
- * @retval -1 if str or res is NULL, or if conversion fails
+ * @pre str != NULL && res != NULL
  * @see decimal_string_to_base2_64 and base2_64_to_residue
  */
-int decimal_string_to_residue(const char *str, size_t minimumSz,
+void decimal_string_to_residue(const char *str, size_t minimumSz,
                            struct ResidueInt *res);
 
 /**
@@ -60,10 +58,9 @@ int decimal_string_to_residue(const char *str, size_t minimumSz,
  *
  * @param res Input residue representation
  * @param v Output array for mixed radix coefficients
- * @return 0 on success
- * @retval -1 if res or v is NULL
+ * @pre res != NULL && v != NULL
  */
-int residue_to_mixed_radix(const struct ResidueInt *res, uint64_t *v);                        
+void residue_to_mixed_radix(const struct ResidueInt *res, uint64_t *v);                        
 
 /**
  * @brief Converts a residue representation back to Base 2^64 integer
@@ -73,11 +70,10 @@ int residue_to_mixed_radix(const struct ResidueInt *res, uint64_t *v);
  *
  * @param res Input residue representation
  * @param bn Output Base 2^64 integer
- * @return 0 on success
- * @retval -1 if res or bn is NULL, or if conversion fails
+ * @pre res != NULL && bn != NULL
  * @see residue_to_mixed_radix
  */
-int residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn);
+void residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn);
 
 /**
  * @brief Converts a Base 2^64 integer to decimal string representation
@@ -87,10 +83,9 @@ int residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn);
  *
  * @param bn Input Base 2^64 integer
  * @param str Output buffer for decimal string (must be large enough)
- * @return 0 on success
- * @retval -1 if bn or str is NULL, or if division fails
+ * @pre bn != NULL && str != NULL
  */
-int base2_64_decimal_string(const struct Base2_64Int *bn, char *str);
+void base2_64_decimal_string(const struct Base2_64Int *bn, char *str);
 
 /**
  * @brief Converts a residue representation back to decimal string
@@ -100,10 +95,9 @@ int base2_64_decimal_string(const struct Base2_64Int *bn, char *str);
  *
  * @param res Input residue representation
  * @param str Output buffer for decimal string (must be large enough)
- * @return 0 on success
- * @retval -1 if res or str is NULL, or if conversion fails
+ * @pre res != NULL && str != NULL
  * @see residue_to_base2_64 and base2_64_decimal_string
  */
-int residue_to_decimal_string(const struct ResidueInt *res, char *str);
+void residue_to_decimal_string(const struct ResidueInt *res, char *str);
 
 #endif // ZAPOCTAK_CONVERSION_H
