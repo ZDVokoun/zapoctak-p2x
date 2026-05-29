@@ -12,6 +12,7 @@
  * 4. Output as decimal string
  */
 int main() {
+  init_moduli_prime_powers(64);
   struct Base2_64Int bn1, bn2;
   struct ResidueInt res1, res2;
 

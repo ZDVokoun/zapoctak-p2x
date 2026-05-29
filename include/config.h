@@ -19,6 +19,27 @@ extern size_t moduli64len;
 /**
  * @brief Array of Mersenne moduli bit sizes
  */
-extern uint64_t moduli64[16];
+extern uint64_t moduli64[18];
+
+/**
+ * @brief Initialize the global moduli array with coprimes starting from n
+ *
+ * Generates a greedy set of pairwise coprime integers starting from n down to 2.
+ * These are used as exponents for Mersenne moduli 2^k - 1.
+ *
+ * @param n Starting value
+ * @pre n >= 2 && n <= 64
+ */
+void init_moduli_greedy(uint64_t n);
+
+/**
+ * @brief Initialize the global moduli array with prime powers up to n
+ *
+ * For each prime p <= n, finds the greatest power m = p^k such that m <= n.
+ *
+ * @param n Upper bound for prime powers
+ * @pre n >= 2 && n <= 64
+ */
+void init_moduli_prime_powers(uint64_t n);
 
 #endif // ZAPOCTAK_CONFIG_H

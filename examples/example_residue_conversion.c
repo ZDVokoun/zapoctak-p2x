@@ -9,6 +9,7 @@
  * Shows how to convert between decimal strings and residue representation
  */
 int main() {
+  init_moduli_greedy(64);
   struct Base2_64Int bn;
   struct ResidueInt res;
 
@@ -27,7 +28,7 @@ int main() {
 
   printf("Expected residues based on moduli:\n");
   for (size_t i = 0; i < res.len; i++) {
-    uint64_t modulus = (1ULL << moduli64[i]) - 1;
+    uint64_t modulus = (moduli64[i] == 64) ? ~0ULL : (1ULL << moduli64[i]) - 1;
     struct Base2_64Int temp_bn;
     b64_copy(&temp_bn, &bn);
     uint64_t rem;

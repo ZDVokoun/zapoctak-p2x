@@ -12,6 +12,7 @@
  * 4. Output as decimal string
  */
 int main() {
+  init_moduli_greedy(64);
   struct ResidueInt res1, res2;
 
   // Example: 987654321987654321123456789 - 123456789123456789987654321

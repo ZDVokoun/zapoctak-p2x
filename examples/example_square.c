@@ -13,6 +13,7 @@
  * 5. Output as decimal string
  */
 int main() {
+  init_moduli_greedy(64);
   struct Base2_64Int bn;
   struct ResidueInt res1, res2;
 

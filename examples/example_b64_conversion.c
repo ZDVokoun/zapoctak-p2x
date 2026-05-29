@@ -9,6 +9,7 @@
  * Shows how to convert between decimal strings and Base 2^64 representation
  */
 int main() {
+  init_moduli_greedy(64);
   struct Base2_64Int bn;
 
   // Examples with different sized numbers
