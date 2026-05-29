@@ -101,6 +101,8 @@ následující příkazy:
 V knihovně nás pak zajímají hlavně následující hlavičky:
 
 \begin{itemize}
+  \item \verb|config.h| -- obsahuje nastavení knihovny a inicializační funkci
+    na generování dělitelů
   \item \verb|conversion.h| -- obsahuje funkce na převody mezi používanými reprezentacemi
   \item \verb|residue.h| -- implementuje reziduovou reprezentaci čísla a operace s ní
 \end{itemize}
@@ -109,6 +111,7 @@ Osnova postupu, jak se s touto knihovnou zachází, když dostaneme na vstupu
 dlouhá čísla v desítkové soustavě, bude typicky následovná:
 
 \begin{enumerate}
+  \item Vygenerujeme si dělitele používaná při výpočtu.
   \item Vytvoříme strukturu pro ukládání čísla jako vektor zbytků. Do něj
     převedeme číslo zapsané v desítkové soustavě.
   \item Provedeme požadované operace na číslo v reziduovém systému.
@@ -116,7 +119,15 @@ dlouhá čísla v desítkové soustavě, bude typicky následovná:
   \item Vyčistíme po sobě.
 \end{enumerate}
 
-První krok lze udělat dvěma způsoby. Nejprve ale vždy začneme tím, že si
+První krok lze udělat prostým zavoláním funkce \verb|init_moduli_greedy(n)|
+nebo zavoláním funkce \verb|init_moduli_prime_powers(n)| z
+\verb|config.h|. Tyto dvě funkce se liší tím, jak jsou implementované a jaká
+čísla vrací. První se vyplatí používat v případech, kdy pracujeme s menšími
+čísly a chceme zmenšit počet použitých dělitelů. Pokud ale chceme dosáhnout
+optimálního rozpětí, tak na to je ideální druhá funkce. Ve většině případů však 
+doporučuji zavolat \verb|init_moduli_greedy(64)|.
+
+Další krok lze udělat dvěma způsoby. Nejprve ale vždy začneme tím, že si
 vytvoříme struktury \verb|ResidueInt|. Pak nejpřímočařejší postup je použít
 funkci \verb|decimal_string_to_residue()|. Tato funkce za nás udělá dva
 mezikroky, kdy převádí řetězec nejprve do multi-precision reprezentace a tu pak
@@ -132,7 +143,8 @@ budou nějak interagovat, na stejnou hodnotu. Při nastavení správné velikost
 zamezí přetečení a nekompatibilitě jednotlivých reprezentací (implemetované
 operace totiž nepodporují operace nad reprezentacemi s různým počtem zbytků).
 Mějte ale na paměti, že v této implemetaci je možno vyjádřit jen čísla o méně
-než 653 bitech.
+než 655 bitech (toto je horní odhad, co umí vygenerovat
+\verb|init_moduli_prime_powers(64)|).
 
 Co se týče operací, které můžeme dělat na čísle v reziduovém systému, jsou
 implementovány funkce na kopírování, sčítání, odčítání, násobení a porovnávání,
@@ -141,7 +153,7 @@ podotknout, že operace sčítání, odčítání a násobení jsou in-place, te
 výsledky operace se uloží do prvního argumentu (třeba operace sčítání provede
 $a := a+b$). 
 
-Krok třetí je analogický k prvnímu kroku. Buď lze udělat funkcí
+Krok čtvrtý je analogický k prvnímu kroku. Buď lze udělat funkcí
 \verb|residue_to_decimal_string()|, nebo se zase udělají dva mezikroky manuálně
 podobně jako v prvním kroku.
 
@@ -214,9 +226,9 @@ $$
 kde pravé výrazy těchto kongruencí jsou vždy v intervalu $[0, m_i]$ a výrazy v
 hranatých závorkách se vyhodnotí na jedničku, pokud platí, jinak na nulu. Stačí
 tedy pak jen zkontrolovat, zda výsledek je roven $m_i$ a dostaneme zbytek po
-dělení bez použití operátoru \verb|%|.
+dělení bez použití operátoru \verb|%| \cite{knuth_taocp2}.
 
-Pro výběr těchto modulů jsem využil následujícího vztahu:
+Pro výběr těchto modulů jsem využil následujícího vztahu \cite{knuth_taocp2}:
 
 \begin{claim}
   \label{claim:1}
@@ -254,9 +266,17 @@ $$
   Druhý vztah pak plyne z prvního vztahu a Euklidova algoritmu.
 \end{proof}
 
-Modula jsem tedy vybral tak, že jsem našel nesoudělná kladná celá čísla, které
-mají co největší součet a jsou menší než 64 (aby nedocházelo k přetečení), a
-následně využil tvrzení \ref{claim:1}.
+Jeden ze způsobů, jak získáváme dělitele, je hladově --  vždy vybírám největší
+číslo, které je nesoudělné s dosud vybranými exponenty dělitelů (zde využívám
+tvrzení \ref{claim:1}), dokud už není číslo k přidání. Množství vyjádřitelných
+čísel pomocí těchto dělitelů není zcela optimální, ale rozmezí, které takhle
+jde vyjádřit, je postačující \cite{knuth_taocp2}.
+
+Druhý způsob pak využívá následujících pozorování -- dělitelů může být nejvýše
+tolik, jako je prvočísel do nejvyššího čísla, a zároveň pokud exponenty
+dělitelů tvoří mocniny prvočísel, tak jejich součin bude aspoň takový, jako
+kdyby mezi exponenty bylo číslo složené z více prvočísel. Takto umíme získat
+optimální seznam dělitelů.
 
 \subsection{Binární reprezentace multi-precision čísla}
 
@@ -314,7 +334,7 @@ zbytek po dělení $m_i$.
 \subsection{Převod ze zbytkového tvaru zpět}
 
 Nejprve si dokážeme tvrzení, které nám nemalou část výpočtu zjednodušší a
-urychlí:
+urychlí \cite{knuth_taocp2}:
 
 \begin{claim}
   Nechť $c,d,e,f \in \mathbb{Z}^+_0$, $e \bmod f = d$ a $ce \bmod f = 1$. Pak platí, že
@@ -359,7 +379,7 @@ $$
 
 kde $0 \leq v_i \leq m_i$ pro $1 \leq i \leq k$. Když do každé z kongruencí
 dosadíme a upravíme, zjistíme, že hodnoty níže kongruenci a všechny podmínky
-splňují:
+splňují \cite{knuth_taocp2}:
 
 $$v_{1} = a_{1}\bmod m_{1},$$
 $$v_{2} = (a_{2}-v_{1})c_{12}\bmod m_{2},$$
@@ -377,7 +397,7 @@ toto číslo $x$ zpět.
 
 Tímto způsobem jsme reprezentovali číslo $x$ ve smíšené soustavě (mixed-radix),
 ze které lze číslo převést do binární soustavy tak, že vyhodnotíme reprezentaci
-$x$ pomocí Hornerova schématu takto:
+$x$ pomocí Hornerova schématu takto \cite{knuth_taocp2}:
 
 $$
 (\cdots ((v_k m_{k-1} + v_{k-1}) m_{k-2}) + \cdots + v_1) m_0 + v_0 = x
@@ -385,8 +405,8 @@ $$
 
 Pokud by nám stačilo jen určitou dvojici čísel v reprezentaci pomocí vektoru
 zbytků porovnat, nepotřebujeme tento výraz vyhodnocovat. Stačí akorát porovnat
-reprezentace ve smíšených soustavách lexikograficky. To je přesně způsob, jak je
-implementováno porovnávání v této knihovně.
+reprezentace ve smíšených soustavách lexikograficky \cite{knuth_taocp2}. To je
+přesně způsob, jak je implementováno porovnávání v této knihovně.
 
 \clearpage
 \begin{thebibliography}{9}
