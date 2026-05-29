@@ -79,6 +79,7 @@ void b64_expand(struct Base2_64Int *bn, size_t new_cap);
  * @param addend Scalar addend
  * @pre bn != NULL
  * @note Asserts on memory allocation failure during expansion.
+ * @note Time complexity: \f$\mathcal{O}(N)\f$ where \f$N\f$ is the number of limbs (bn->len)
  */
 void b64_mul(struct Base2_64Int *bn, uint64_t multiplier, uint64_t addend);
 
@@ -91,6 +92,7 @@ void b64_mul(struct Base2_64Int *bn, uint64_t multiplier, uint64_t addend);
  * @param divisor 64-bit divisor
  * @param remainder Output remainder
  * @pre bn != NULL && divisor != 0
+ * @note Time complexity: \f$\mathcal{O}(N)\f$ where \f$N\f$ is the number of limbs (bn->len)
  */
 void base2_64_divmod(struct Base2_64Int *bn, uint64_t divisor,
                     uint64_t *remainder);

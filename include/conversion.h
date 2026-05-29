@@ -14,6 +14,8 @@
   * @param str Input decimal string
   * @param result Output Base 2^64 integer
   * @pre str != NULL && result != NULL
+  * @note Asserts on memory allocation failure during initialization and expansion.
+  * @note Time complexity: \f$\mathcal{O}(S \cdot M)\f$ where \f$S\f$ is the length of the decimal string and \f$N\f$ is the number of limbs in the result.
   */
 void decimal_string_to_base2_64(const char *str, struct Base2_64Int *result);
 
@@ -29,6 +31,7 @@ void decimal_string_to_base2_64(const char *str, struct Base2_64Int *result);
  * @param minimumSz Minimum size for the residue representation
  * @param res Output residue representation
  * @pre bn != NULL && res != NULL
+ * @note Time complexity: \f$\mathcal{O}(N \cdot M)\f$ where \f$N\f$ is the number of limbs in the Base 2^64 integer and \f$M\f$ is the number of moduli in the residue representation.
  */
 void base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
                          struct ResidueInt *res);
@@ -44,6 +47,7 @@ void base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
  * @param res Output residue representation
  * @pre str != NULL && res != NULL
  * @see decimal_string_to_base2_64 and base2_64_to_residue
+ * @note Time complexity: \f$\mathcal{O}(S \cdot M)\f$ where \f$S\f$ is the length of the decimal string and \f$M\f$ is the number of moduli in the residue representation.
  */
 void decimal_string_to_residue(const char *str, size_t minimumSz,
                            struct ResidueInt *res);
@@ -59,6 +63,7 @@ void decimal_string_to_residue(const char *str, size_t minimumSz,
  * @param res Input residue representation
  * @param v Output array for mixed radix coefficients
  * @pre res != NULL && v != NULL
+ * @note Time complexity: \f$\mathcal{O}(M^2)\f$, where \f$M\f$ is the number of moduli in the residue representation, due to the nested loops for coefficient adjustment.
  */
 void residue_to_mixed_radix(const struct ResidueInt *res, uint64_t *v);                        
 
@@ -72,6 +77,7 @@ void residue_to_mixed_radix(const struct ResidueInt *res, uint64_t *v);
  * @param bn Output Base 2^64 integer
  * @pre res != NULL && bn != NULL
  * @see residue_to_mixed_radix
+ * @note Time complexity: \f$\mathcal{O}(M^2 + N \cdot M)\f$ where \f$M\f$ is the number of moduli in the residue representation and \f$N\f$ is the number of limbs in the Base 2^64 integer.
  */
 void residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn);
 
@@ -84,6 +90,7 @@ void residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn);
  * @param bn Input Base 2^64 integer
  * @param str Output buffer for decimal string (must be large enough)
  * @pre bn != NULL && str != NULL
+ * @note Time complexity: \f$\mathcal{O}(bn->len)\f$
  */
 void base2_64_decimal_string(const struct Base2_64Int *bn, char *str);
 
@@ -97,6 +104,7 @@ void base2_64_decimal_string(const struct Base2_64Int *bn, char *str);
  * @param str Output buffer for decimal string (must be large enough)
  * @pre res != NULL && str != NULL
  * @see residue_to_base2_64 and base2_64_decimal_string
+ * @note Time complexity: \f$\mathcal{O}(M^2 + S)\f$ where \f$M\f$ is the number of moduli in the residue representation and \f$S\f$ is the length of the output decimal string.
  */
 void residue_to_decimal_string(const struct ResidueInt *res, char *str);
 

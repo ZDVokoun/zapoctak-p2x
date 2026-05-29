@@ -29,6 +29,7 @@ extern uint64_t moduli64[18];
  *
  * @param n Starting value
  * @pre n >= 2 && n <= 64
+ * @note Time complexity: O(n * moduli64len)
  */
 void init_moduli_greedy(uint64_t n);
 
@@ -39,6 +40,7 @@ void init_moduli_greedy(uint64_t n);
  *
  * @param n Upper bound for prime powers
  * @pre n >= 2 && n <= 64
+ * @note Time complexity: O(n * moduli64len)
  */
 void init_moduli_prime_powers(uint64_t n);
 
