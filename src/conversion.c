@@ -76,7 +76,7 @@ void base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
   for (size_t i = 0; i < res->len; i++) {
     uint64_t modulusPow = moduli64[i];
     uint64_t residue = 0;
-    uint64_t modulus = (1ULL << modulusPow) - 1;
+    uint64_t modulus = (modulusPow == 64) ? ~0ULL : (1ULL << modulusPow) - 1;
 
     size_t current_bit = 0;
     size_t limb_index = 0;
@@ -92,6 +92,7 @@ void base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
       if (limb_index >= bn->len) {
         break;
       }
+      uint64_t val;
       if (current_bit + modulusPow > 64) {
         uint64_t lower_part, upper_part = 0;
         lower_part = (bn->limbs[limb_index] >> current_bit) & modulus;
@@ -99,11 +100,15 @@ void base2_64_to_residue(const struct Base2_64Int *bn, size_t minimumSz,
           upper_part =
               bn->limbs[limb_index + 1] & (modulus >> (64 - current_bit));
         }
-        residue += lower_part | (upper_part << (64 - current_bit));
-
+        val = lower_part | (upper_part << (64 - current_bit));
       } else {
-        residue += (bn->limbs[limb_index] >> current_bit) & modulus;
+        val = (bn->limbs[limb_index] >> current_bit) & modulus;
       }
+      
+      uint64_t prev = residue;
+      residue += val;
+      if (modulusPow == 64 && residue < prev) residue++;
+
       if (residue >= modulus)
         residue -= modulus;
 
@@ -135,7 +140,7 @@ void residue_to_mixed_radix(const struct ResidueInt *res, uint64_t *v) {
 
   uint64_t precomputed_moduli[res->len];
   for (size_t i = 0; i < res->len; i++) {
-    precomputed_moduli[i] = (1ULL << moduli64[i]) - 1;
+    precomputed_moduli[i] = (moduli64[i] == 64) ? ~0ULL : (1ULL << moduli64[i]) - 1;
   }
 
   // Evaluating the expressions described in the theory section
@@ -171,7 +176,7 @@ void residue_to_base2_64(const struct ResidueInt *res, struct Base2_64Int *bn) {
 
   // Evaluate the number in mixed radix system with Horner's scheme
   for (size_t i = res->len; i-- > 0;) {
-    uint64_t modulus = (1ULL << moduli64[i]) - 1;
+    uint64_t modulus = (moduli64[i] == 64) ? ~0ULL : (1ULL << moduli64[i]) - 1;
     b64_mul(bn, modulus, 0);
     b64_mul(bn, 1, v[i]);
   }

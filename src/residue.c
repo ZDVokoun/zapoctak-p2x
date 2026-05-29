@@ -53,10 +53,10 @@ void residue_add(const struct ResidueInt *a, const struct ResidueInt *b) {
   assert(a->len == b->len);
 
   for (size_t i = 0; i < a->len; i++) {
-    uint64_t modulus = (1ULL << moduli64[i]) - 1;
-    a->residues[i] =
-        ((a->residues[i] + b->residues[i]) & modulus) +
-        (uint64_t)((a->residues[i] + b->residues[i]) >> moduli64[i] >= 1);
+    uint64_t modulus = (moduli64[i] == 64) ? ~0ULL : (1ULL << moduli64[i]) - 1;
+    uint64_t sum = a->residues[i] + b->residues[i];
+    uint64_t carry = (moduli64[i] == 64) ? (sum < a->residues[i]) : (sum >> moduli64[i]);
+    a->residues[i] = (sum & modulus) + carry;
     if (a->residues[i] == modulus)
       a->residues[i] = 0;
   }
@@ -68,10 +68,12 @@ void residue_sub(const struct ResidueInt *a, const struct ResidueInt *b) {
   assert(a->len == b->len);
 
   for (size_t i = 0; i < a->len; i++) {
-    uint64_t modulus = (1ULL << moduli64[i]) - 1;
-    a->residues[i] =
-        ((a->residues[i] + (1ULL << moduli64[i]) - b->residues[i]) & modulus) -
-        (uint64_t)(a->residues[i] < b->residues[i]);
+    uint64_t modulus = (moduli64[i] == 64) ? ~0ULL : (1ULL << moduli64[i]) - 1;
+    uint64_t diff = a->residues[i] - b->residues[i];
+    if (a->residues[i] < b->residues[i]) {
+      diff--;
+    }
+    a->residues[i] = diff & modulus;
     if (a->residues[i] == modulus)
       a->residues[i] = 0;
   }
@@ -83,10 +85,16 @@ void residue_mul(const struct ResidueInt *a, const struct ResidueInt *b) {
   assert(a->len == b->len);
 
   for (size_t i = 0; i < a->len; i++) {
-    uint64_t modulus = (1ULL << moduli64[i]) - 1;
+    uint64_t modulus = (moduli64[i] == 64) ? ~0ULL : (1ULL << moduli64[i]) - 1;
     uint128_t product = (uint128_t)a->residues[i] * (uint128_t)b->residues[i];
-    a->residues[i] =
-        (uint64_t)(product & modulus) + (uint64_t)(product >> moduli64[i]);
+    
+    uint64_t low = (uint64_t)product & modulus;
+    uint64_t high = (uint64_t)(product >> moduli64[i]);
+    
+    uint64_t res = low + high;
+    uint64_t carry = (moduli64[i] == 64) ? (res < low) : (res >> moduli64[i]);
+    
+    a->residues[i] = (res & modulus) + carry;
     if (a->residues[i] == modulus)
       a->residues[i] = 0;
   }
