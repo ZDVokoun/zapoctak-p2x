@@ -175,22 +175,22 @@ Celý tento program stojí na známé jako Čínská zbytková věta. Níže je 
 znění:
 
 \begin{theorem}[Čínská zbytková věta]
-Nechť $m_1, m_2, \dots, m_k$ jsou po dvou nesoudělná přirozená čísla, tj.
-  $\gcd(m_i, m_j) = 1$ pro $i \neq j$. Označme $M = m_1 m_2 \dots m_k$. Potom
-  pro libovolná celá čísla $a_1, a_2, \dots, a_k$ má soustava kongruencí
+Nechť $m_1, m_2, \dots, m_K$ jsou po dvou nesoudělná přirozená čísla, tj.
+  $\gcd(m_i, m_j) = 1$ pro $i \neq j$. Označme $M = m_1 m_2 \dots m_K$. Potom
+  pro libovolná celá čísla $a_1, a_2, \dots, a_K$ má soustava kongruencí
 $$
 \begin{aligned}
     x &\equiv a_1 \pmod{m_1} \\
     x &\equiv a_2 \pmod{m_2} \\
       &\vdots \\
-    x &\equiv a_k \pmod{m_k}
+    x &\equiv a_K \pmod{m_K}
 \end{aligned}
 $$
 řešení, které je určeno jednoznačně modulo $M$.
 \end{theorem}
 
 Z této věty pak plyne to, že čísla od 0 po $M-1$ umíme vyjádřit jako vektor
-zbytků po dělení čísly $m_1,m_2, \dots, m_k$. Zároveň můžeme vypozorovat, že pokud
+zbytků po dělení čísly $m_1,m_2, \dots, m_K$. Zároveň můžeme vypozorovat, že pokud
 chceme sčítat, odčítat a násobit, stačí nám v tomto vyjádření provádět danou
 operaci po složkách. Když totiž máme pro čísla $x$ a $y$ a dělitel $m_i$ 
 zbytky $a_i$ a $b_i$, platí kongruence:
@@ -295,7 +295,8 @@ soustavě, ale v soustavě o základu $2^{64}$. Pro sčítání tedy přičteme 
 číslo k \uv{cifře} na nejméně významné pozici, carry přičteme k vyšší pozici
 atd. Podobně u násobení vynásobíme \uv{číslici} na nejnižší pozici, carry
 přičteme k součinu na vyšší pozici atd. Dělení je analogické, jen začínáme od
-nejvyšší pozice a místo carry předáváme zbytek po dělení.
+nejvyšší pozice a místo carry předáváme zbytek po dělení. Tyto všechny operace
+mají časovou složitost $\mathcal{O}(N)$, kde $N$ je počet cifer.
 
 Převod z desítkové soustavy na binární je implementováno tak, že rozdělíme
 zápis na chunky po 19 cifrách (od nejméně významné pozice), ty samostatně
@@ -303,9 +304,11 @@ převedu na číslo \verb|uint64_t| pomocí funkce \verb|strtoull()| a následn�
 chunky od nejvýznamnější pozice přičtu chunk k multi-precision číslu a
 multi-precision číslo vynásobím $10^{19}$ (tato mocnina byla zvolena z toho
 důvodu, že se jedná o nejvyšší mocninu deseti, která se vejde do 64-bitového
-čísla). Převod z binární na desítkovou soustavu se udělá obdobně, jen se místo
-násobení dělí číslem $10^{19}$ a postupně si ukládáme zbytky po dělení, které
-následně převedeme na string.
+čísla). Tato operace trvá $\mathcal{O}(S)$, kde $S$ je délka zápisu v desítkové
+soustavě. Převod z binární na desítkovou soustavu se udělá obdobně, jen se
+místo násobení dělí číslem $10^{19}$ a postupně si ukládáme zbytky po dělení,
+které následně převedeme na string. To potrvá $\mathcal{O}(N)$ času, kde $N$ je
+počet cifer.
 
 \subsection{Převod na zbytkový tvar}
 
@@ -329,7 +332,9 @@ x \equiv \alpha_m \cdot (2^{\ell})^m + \dots + \alpha_1 \cdot 2^{\ell} + \alpha_
 $$
 
 Stačí nám teda čísla $\alpha_0, \alpha_1, \dots, \alpha_m$ sečíst a získat
-zbytek po dělení $m_i$.
+zbytek po dělení $m_i$. Časová složitost tohoto převodu je $\mathcal{O}(N \cdot
+K)$, kde $N$ je počet cifer v zápisu o základu $2^{64}$ a $K$ je počet
+dělitelů.
 
 \subsection{Převod ze zbytkového tvaru zpět}
 
@@ -363,21 +368,21 @@ urychlí \cite{knuth_taocp2}:
   jak jsme chtěli.
 \end{proof}
 
-Tohoto tvrzení využijeme pro výpočet konstant $c_{ij}$ pro $1\le i<j\le k$, kde
+Tohoto tvrzení využijeme pro výpočet konstant $c_{ij}$ pro $1\le i<j\le K$, kde
 $$c_{ij} m_i \equiv 1 \pmod{m_j}.$$  
 
 Počítáme tedy modulární inverze $m_i$ modulo $m_j$. Teď budeme chtít získat
 takové vyjádření $x$, aby platilo
 
 $$
-0 \leq x<M, \quad x \equiv a_i \pmod{m_{i}} \quad \text{pro } 1 \le i \le k,
+0 \leq x<M, \quad x \equiv a_i \pmod{m_{i}} \quad \text{pro } 1 \le i \le K,
 $$  
 
 $$
-x=v_k m_{k-1} \dots m_2 m_1 + \dots + v_3 m_2 m_1 +v_2 m_1 +v_1,
+x=v_K m_{K-1} \dots m_2 m_1 + \dots + v_3 m_2 m_1 +v_2 m_1 +v_1,
 $$
 
-kde $0 \leq v_i \leq m_i$ pro $1 \leq i \leq k$. Když do každé z kongruencí
+kde $0 \leq v_i \leq m_i$ pro $1 \leq i \leq K$. Když do každé z kongruencí
 dosadíme a upravíme, zjistíme, že hodnoty níže kongruenci a všechny podmínky
 splňují \cite{knuth_taocp2}:
 
@@ -385,28 +390,32 @@ $$v_{1} = a_{1}\bmod m_{1},$$
 $$v_{2} = (a_{2}-v_{1})c_{12}\bmod m_{2},$$
 $$v_{3} = ((a_{3}-v_{1})c_{13}-v_{2})c_{23}\bmod m_{3},$$  
 $$\vdots$$
-$$v_{k} = (\dots((a_{k}-v_{1})c_{1k}-v_{2})c_{2k}-\dots-v_{k-1})c_{(k-1)k}\bmod m_{k}.$$  
+$$v_{K} = (\dots((a_{K}-v_{1})c_{1K}-v_{2})c_{2K}-\dots-v_{K-1})c_{(K-1)K}\bmod m_{K}.$$  
 
-Protože pro každé $1 \leq i \leq k$ platí $0 \leq v_i < m_i$, výsledné $x$ není
+Protože pro každé $1 \leq i \leq K$ platí $0 \leq v_i < m_i$, výsledné $x$ není
 nikdy větší než $M$. Dále platí, že každý vektor zbytků taky dá jedinečné číslo
-$x$, protože pro každé $1 \leq i \leq k$ je $0 \leq a_i < m_i$, tedy hodnoty
+$x$, protože pro každé $1 \leq i \leq K$ je $0 \leq a_i < m_i$, tedy hodnoty
 $v_i$ jsou jednoznačně určeny a stejně pak i číslo $x$. A protože hodnoty $v_1,
-v_2, \dots, v_k$ mohou dohromady dosahovat až $m_1 m_2 \cdots m_k = M$ různých
+v_2, \dots, v_K$ mohou dohromady dosahovat až $m_1 m_2 \cdots m_K = M$ různých
 hodnot, pro každé $x$ existuje vektor zbytků, které po této proceduře vrátí
 toto číslo $x$ zpět.
 
-Tímto způsobem jsme reprezentovali číslo $x$ ve smíšené soustavě (mixed-radix),
-ze které lze číslo převést do binární soustavy tak, že vyhodnotíme reprezentaci
-$x$ pomocí Hornerova schématu takto \cite{knuth_taocp2}:
+Tímto způsobem jsme v čase $\mathcal{O}(K^2)$ reprezentovali číslo $x$ ve
+smíšené soustavě (mixed-radix), ze které lze číslo převést do binární soustavy
+tak, že vyhodnotíme reprezentaci $x$ pomocí Hornerova schématu takto
+\cite{knuth_taocp2}:
 
 $$
-(\cdots ((v_k m_{k-1} + v_{k-1}) m_{k-2}) + \cdots + v_1) m_0 + v_0 = x
+(\cdots ((v_K m_{K-1} + v_{K-1}) m_{K-2}) + \cdots + v_1) m_0 + v_0 = x
 $$
 
 Pokud by nám stačilo jen určitou dvojici čísel v reprezentaci pomocí vektoru
 zbytků porovnat, nepotřebujeme tento výraz vyhodnocovat. Stačí akorát porovnat
 reprezentace ve smíšených soustavách lexikograficky \cite{knuth_taocp2}. To je
 přesně způsob, jak je implementováno porovnávání v této knihovně.
+
+Celkově časová složitost převodu ze zbytkového tvaru zpět na desítkový zápis a
+porovnávání dvou čísel ve zbytkovém tvaru je $\mathcal{O}(K^2)$.
 
 \clearpage
 \begin{thebibliography}{9}
