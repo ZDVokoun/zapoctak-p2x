@@ -12,6 +12,11 @@
 typedef unsigned _BitInt(128) uint128_t;
 
 /**
+ * @brief Maximum number of Mersenne moduli supported
+ */
+#define MAX_MODULI_COUNT 18
+
+/**
  * @brief Number of Mersenne moduli used
  */
 extern size_t moduli64len;
@@ -19,13 +24,13 @@ extern size_t moduli64len;
 /**
  * @brief Array of Mersenne moduli bit sizes
  */
-extern uint64_t moduli64[18];
+extern uint64_t moduli64[MAX_MODULI_COUNT];
 
 /**
  * @brief Initialize the global moduli array with coprimes starting from n
  *
- * Generates a greedy set of pairwise coprime integers starting from n down to 2.
- * These are used as exponents for Mersenne moduli 2^k - 1.
+ * Generates a greedy set of pairwise coprime integers starting from n down
+ * to 2. These are used as exponents for Mersenne moduli 2^k - 1.
  *
  * @param n Starting value
  * @pre n >= 2 && n <= 64

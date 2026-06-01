@@ -5,7 +5,7 @@
 
 // Define global configuration
 size_t moduli64len = 0;
-uint64_t moduli64[18] = {0};
+uint64_t moduli64[MAX_MODULI_COUNT] = {0};
 
 static uint64_t gcd(uint64_t a, uint64_t b) {
   while (b) {
@@ -23,7 +23,7 @@ void init_moduli_greedy(uint64_t n) {
   moduli64[0] = n;
   moduli64len = 1;
 
-  for (uint64_t k = n - 1; k >= 2 && moduli64len < 18; k--) {
+  for (uint64_t k = n - 1; k >= 2 && moduli64len < MAX_MODULI_COUNT; k--) {
     bool coprime = true;
     for (size_t i = 0; i < moduli64len; i++) {
       if (gcd(k, moduli64[i]) != 1) {
@@ -56,7 +56,7 @@ void init_moduli_prime_powers(uint64_t n) {
   }
 
   moduli64len = 0;
-  for (uint64_t p = 2; p <= n && moduli64len < 18; p++) {
+  for (uint64_t p = 2; p <= n && moduli64len < MAX_MODULI_COUNT; p++) {
     if (is_prime[p]) {
       uint64_t m = p;
       while (n / p >= m) {
